@@ -1,0 +1,2376 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+  <link rel="manifest" href="./manifest.json">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="IMS">
+  <meta name="theme-color" content="#293b85">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Issues Management System – Cameron Group</title>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --blue:#293b85;--blue-dark:#1e2d6b;--blue-light:#e5eeff;
+  --red:#b90303;--red-dark:#8a0202;--text:#1a1a1a;--text-muted:#555;
+  --bg:#f5f5f5;--border:#e0e0e0;--white:#fff;
+  --s-opened:#ffe5e5;--s-inprogress:#e5f0ff;--s-discussion:#f0e5ff;
+  --s-recommendation:#ffe8cc;--s-resolution:#e5f9f7;--s-actiontaken:#fffff0;
+  --s-needinfo:#f0f0f0;--s-completed:#e5fcec;--s-closed:#fff;
+  --comment-bg:#DDE4FF;--ai-bg:#FFFFEB;--response-bg:#E5FCEC;
+}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,'Helvetica Neue',Arial,sans-serif;font-size:13px;color:var(--text);background:var(--bg);line-height:1.4;min-width:900px}
+h1{font-size:24px;font-weight:700;color:var(--blue)}
+h2{font-size:18px;font-weight:700;color:var(--blue)}
+h3{font-size:14px;font-weight:700;color:var(--blue)}
+
+/* BUTTONS */
+.btn{display:inline-flex;align-items:center;gap:4px;padding:6px 12px;border-radius:4px;border:none;font-size:12px;font-weight:700;cursor:pointer;transition:opacity .15s;white-space:nowrap}
+.btn:hover{opacity:.88}.btn:disabled{opacity:.45;cursor:not-allowed}
+.btn-primary{background:var(--blue);color:#fff}
+.btn-danger{background:var(--red);color:#fff}
+.btn-secondary{background:#f0f0f0;color:var(--text);border:1px solid #ccc}
+.btn-sm{padding:3px 8px;font-size:11px}
+.btn-xs{padding:2px 6px;font-size:11px}
+
+/* FORMS */
+input[type=text],input[type=email],input[type=tel],input[type=number],select,textarea{
+  border:1px solid #ccc;padding:5px 8px;border-radius:4px;font-size:12px;
+  font-family:inherit;color:var(--text);background:#fff;width:100%
+}
+input:focus,select:focus,textarea:focus{outline:none;border:2px solid var(--blue)}
+textarea{min-height:60px;resize:vertical}
+label{font-weight:600;display:block;margin-bottom:3px;font-size:11px}
+.form-group{margin-bottom:10px}
+.form-row{display:flex;gap:10px}
+.form-row .form-group{flex:1}
+.field-error{color:var(--red);font-size:11px;margin-top:2px}
+
+/* HEADER */
+#app-header{
+  position:fixed;top:0;left:0;right:0;z-index:900;
+  height:70px;background:var(--blue);color:#fff;
+  display:flex;align-items:center;justify-content:center;
+  box-shadow:0 2px 6px rgba(0,0,0,.25);
+}
+#app-header-wrapper{
+  display:flex;align-items:center;gap:0;width:100%;max-width:75%;padding:0;
+}
+.header-logo{height:58px;width:auto;object-fit:contain;background:#fff;border-radius:3px;padding:2px 4px;flex-shrink:0;margin-left:18px;margin-right:32px;}
+.header-title-block{display:flex;flex-direction:column;justify-content:center}
+.header-app-name{font-size:22px;font-weight:800;color:#fff;line-height:1.1;letter-spacing:-.3px}
+.header-company-name{font-size:15px;font-weight:700;color:rgba(255,255,255,.95);line-height:1.2}
+.header-client-line{font-size:12px;color:rgba(255,255,255,.75);line-height:1.2}
+.header-center{flex:1;display:flex;justify-content:center}
+.header-right{display:flex;align-items:center;gap:7px;flex-shrink:0}
+.header-user-info{font-size:11px;color:rgba(255,255,255,.9);text-align:right;line-height:1.3}
+.header-user-info strong{display:block;font-size:13px;font-weight:700}
+.header-page-label{font-size:18px;font-weight:700;opacity:.95;margin-right:10px;letter-spacing:.5px}
+
+/* MAIN LAYOUT */
+#page-container{padding-top:70px;min-height:100vh}
+#page-container.issues-page { display: flex; justify-content: center; }
+#main-content{padding:10px 12px;max-width:75%;margin:0 auto;}
+#login-page{
+  min-height:calc(100vh - 70px);display:flex;flex-direction:column;
+  align-items:center;justify-content:center;background:var(--bg);padding:30px 16px;
+}
+.login-hero{
+  width:100%;max-width:420px;background:var(--blue);color:#fff;
+  padding:18px 24px;border-radius:4px 4px 0 0;
+  display:flex;align-items:center;gap:14px;
+}
+.login-hero-logo{height:70px;width:auto;background:#fff;border-radius:4px;padding:4px 6px}
+.login-hero-text h1{font-size:17px;color:#fff;line-height:1.2}
+.login-hero-text p{font-size:11px;opacity:.8;margin-top:3px}
+.login-card{
+  width:100%;max-width:420px;background:#fff;padding:24px;
+  border-radius:0 0 4px 4px;box-shadow:0 4px 16px rgba(0,0,0,.12);
+}
+.login-card h2{font-size:16px;margin-bottom:16px;border-bottom:2px solid var(--blue);padding-bottom:8px}
+.login-msg{padding:8px 12px;border-radius:4px;font-size:12px;margin-bottom:12px}
+.login-msg.success{background:#e5fcec;color:#175e2c;border:1px solid #b0e8c6}
+.login-msg.error{background:#ffe5e5;color:var(--red);border:1px solid #fbb}
+#code-section{display:none;animation:fadeIn .3s ease}
+.code-input-row{display:flex;gap:8px}
+.code-input-row input{font-size:20px;letter-spacing:8px;text-align:center;font-weight:700;max-width:160px}
+
+/* SUB-HEADER */
+#sub-header{
+  background:#fff;border-bottom:2px solid var(--border);
+  padding:7px 12px;position:sticky;top:70px;z-index:800;
+}
+.sub-header-row1{display:flex;align-items:center;gap:8px;margin-bottom:5px;flex-wrap:wrap}
+.sub-header-row2{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.info-text{font-size:10px;color:var(--text-muted);margin-top:4px}
+.filter-badge{background:var(--red);color:#fff;border-radius:10px;padding:1px 7px;font-size:11px;font-weight:700}
+.toggle-label{display:flex;align-items:center;gap:4px;cursor:pointer;font-size:11px;user-select:none}
+.filter-dropdown-wrapper{position:relative}
+.filter-dropdown-panel{
+  display:none;position:absolute;top:calc(100% + 4px);left:0;
+  background:#fff;border:1px solid var(--border);border-radius:4px;
+  box-shadow:0 4px 16px rgba(0,0,0,.12);z-index:850;min-width:320px;padding:10px;
+  max-height:400px;overflow-y:auto;
+}
+.filter-dropdown-panel.open{display:block}
+.filter-section-title{font-size:10px;font-weight:700;color:var(--blue);text-transform:uppercase;margin:8px 0 3px}
+.filter-section-title:first-child{margin-top:0}
+.checkbox-group{display:grid;grid-template-columns:1fr 1fr;gap:8px 12px;}
+.checkbox-label{display:flex;align-items:center;gap:5px;cursor:pointer;font-size:11px}
+
+/* ISSUE CARD */
+.add-category-row{display:flex;gap:7px;margin-bottom:10px}
+.add-category-row input{max-width:280px}
+
+/* CATEGORY */
+.category-block{margin-bottom:10px;border-radius:4px;overflow:hidden;box-shadow:0 1px 4px rgba(0,0,0,.08)}
+.category-header{
+  background:var(--blue);color:#fff;padding:7px 12px;
+  display:flex;align-items:center;font-size:13px;font-weight:700;
+}
+.category-header .cat-name{flex:1}
+.cat-menu-btn{background:transparent;border:none;color:rgba(255,255,255,.8);cursor:pointer;font-size:11px;padding:0 3px;border-radius:3px}
+.cat-menu-btn:hover{color:#fff;background:rgba(255,255,255,.15)}
+.category-body{
+  border-left:4px solid var(--red);border-right:4px solid var(--red);
+  background:var(--bg);padding:6px 10px;
+}
+.category-empty{color:var(--text-muted);font-style:italic;font-size:11px;padding:4px 0}
+.category-add-row{margin-top:6px;display:flex;gap:6px;flex-wrap:wrap}
+
+/* ISSUE CARD */
+.issue-card{
+  border-radius:4px;border-left:4px solid var(--blue);
+  padding:6px 8px;margin-bottom:5px;
+  box-shadow:0 1px 3px rgba(0,0,0,.07);transition:box-shadow .15s;
+}
+.issue-card:hover{box-shadow:0 2px 8px rgba(0,0,0,.12)}
+.issue-layout{display:flex;gap:8px;align-items:flex-start}
+.issue-main{flex:1;min-width:0}
+.issue-title-link{font-weight:700;font-size:13px;color:var(--blue);cursor:pointer;text-decoration:none}
+.issue-title-link:hover{text-decoration:underline}
+.issue-desc{font-size:11px;color:var(--text-muted);margin-top:1px;overflow:hidden;width:100%;white-space:pre-wrap;word-break:break-word;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;-webkit-box-pack:start}
+.issue-right{flex:0 0 auto;display:flex;flex-direction:column;align-items:flex-end;gap:3px;min-width:auto}
+.issue-attrs-row{display:flex;flex-direction:row;gap:8px;font-size:10px}
+.issue-attrs-col{display:flex;flex-direction:row;gap:8px;align-items:flex-end}
+.issue-action-btns{display:flex;gap:3px;flex-wrap:wrap;justify-content:flex-end;margin-top:2px}
+
+/* ATTR TAGS */
+.attr-tag{display:inline-flex;align-items:center;gap:2px;font-size:10px;padding:1px 6px;border-radius:8px;background:#eee;color:#444;font-weight:600;white-space:nowrap}
+.attr-tag.priority-critical{background:#ffe5e5;color:var(--red)}
+.attr-tag.priority-high{background:#fff0e5;color:#c25f00}
+.attr-tag.priority-normal{background:#e5f0ff;color:var(--blue)}
+.attr-tag.safety-severe{background:#ffe5e5;color:var(--red)}
+.attr-tag.safety-minor{background:#fff9e5;color:#806000}
+.attr-tag.safety-potential{background:#fffde5;color:#605000}
+.attr-tag.redesign-yes{background:#f0e5ff;color:#5a00ab}
+.attr-tag.redesign-potential{background:#f7e5ff;color:#7000a0}
+
+/* Hide non-status attributes when toggle is on */
+body.hide-attrs .attr-tag.priority-critical,
+body.hide-attrs .attr-tag.priority-high,
+body.hide-attrs .attr-tag.priority-normal,
+body.hide-attrs .attr-tag.safety-severe,
+body.hide-attrs .attr-tag.safety-minor,
+body.hide-attrs .attr-tag.safety-potential,
+body.hide-attrs .attr-tag.redesign-yes,
+body.hide-attrs .attr-tag.redesign-potential {
+  display: none;
+}
+
+/* NESTED ITEMS */
+.nested-items{margin-top:2px}
+.nested-row{display:flex;gap:0;margin-bottom:3px}
+
+/* COMMENT */
+.comment-card{
+  background:var(--comment-bg);border-radius:4px;
+  padding:4px 6px;border-left:3px solid #a0aaee;flex:1;
+}
+/* ACTION ITEM — same level as comment */
+.ai-card{
+  background:var(--ai-bg);border-radius:4px;
+  padding:4px 6px;border-left:3px solid #c4c400;flex:1;
+  display:flex;flex-direction:column;gap:2px;
+}
+.response-card{
+  background:var(--response-bg);border-radius:4px;
+  padding:4px 6px;border-left:3px solid #55cc88;
+  margin-left:8px;margin-bottom:3px;
+}
+.nested-card-layout{display:flex;gap:6px;align-items:flex-start}
+.nested-card-body{flex:1;min-width:0}
+.nested-card-right{flex:0 0 auto;display:flex;flex-direction:row;align-items:flex-start;gap:6px;min-width:auto;font-size:9px}
+.nested-text{font-size:11px;overflow:hidden;white-space:pre-wrap;word-break:break-word;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;line-height:1.3}
+.nested-text.expanded{-webkit-line-clamp:unset;display:block;white-space:pre-wrap;word-break:break-word}
+.nested-meta-item{font-size:9px;color:var(--text-muted);white-space:nowrap}
+.nested-actions-row{display:flex;gap:3px;margin-top:2px}
+.nested-actions-row .btn-xs{min-width:60px;text-align:center}
+.lock-icon{display:inline-block;width:60px;height:20px;text-align:center;line-height:20px;font-size:14px;opacity:.6;vertical-align:middle}
+
+.response-card{
+  background:var(--response-bg);border-radius:4px;
+  padding:3px 6px;border-left:3px solid #55cc88;
+  margin:2px 0 0 0;
+}
+.response-layout{display:flex;gap:4px;align-items:flex-start}
+.response-body{flex:1;min-width:0}
+.response-right{flex:0 0 auto;display:flex;flex-direction:row;align-items:center;gap:4px;min-width:auto;font-size:9px}
+
+/* TYPE BADGES */
+.nested-type-badge{font-size:9px;font-weight:700;text-transform:uppercase;padding:2px 5px;border-radius:3px;flex-shrink:0;margin-top:1px}
+.badge-comment{background:#c8d4ff;color:#1a2060}
+.badge-ai{background:#ffff99;color:#555500}
+.badge-response{background:#b8f0cc;color:#0a4020}
+
+/* STATUS BADGES */
+.status-badge{padding:2px 6px;border-radius:3px;font-size:10px;font-weight:700;white-space:nowrap}
+.status-Opened{background:var(--s-opened);color:#7a0000}
+.status-In-Progress{background:var(--s-inprogress);color:#003080}
+.status-Discussion{background:var(--s-discussion);color:#4a0080}
+.status-Recommendation{background:var(--s-recommendation);color:#7a3500}
+.status-Resolution{background:var(--s-resolution);color:#005048}
+.status-Action-Taken{background:var(--s-actiontaken);color:#505000}
+.status-Need-Information{background:var(--s-needinfo);color:#444}
+.status-Action-Completed{background:var(--s-completed);color:#0a4020}
+.status-Closed{background:var(--s-closed);color:#666;border:1px solid #ddd}
+.status-In-Process{background:var(--s-inprogress);color:#003080}
+.status-Need-Info{background:var(--s-needinfo);color:#444}
+
+/* ISSUE CARD BACKGROUNDS */
+.bg-Opened{background:var(--s-opened)}
+.bg-In-Progress{background:var(--s-inprogress)}
+.bg-Discussion{background:var(--s-discussion)}
+.bg-Recommendation{background:var(--s-recommendation)}
+.bg-Resolution{background:var(--s-resolution)}
+.bg-Action-Taken{background:var(--s-actiontaken)}
+.bg-Need-Information{background:var(--s-needinfo)}
+.bg-Action-Completed{background:var(--s-completed)}
+.bg-Closed{background:var(--s-closed)}
+
+/* ISSUE HISTORY PAGE */
+#history-page{padding:10px 12px;max-width:75%;margin:0 auto}
+.breadcrumb{font-size:11px;color:var(--text-muted);margin-bottom:8px}
+.breadcrumb a{color:var(--blue);cursor:pointer;text-decoration:none}
+.breadcrumb a:hover{text-decoration:underline}
+.history-issue-title{font-size:18px;font-weight:700;color:var(--text);margin-bottom:3px}
+.history-issue-desc{font-size:13px;color:var(--text-muted);margin-bottom:8px;cursor:pointer;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
+.history-filters{display:flex;gap:14px;margin-bottom:8px}
+.history-item{border-radius:4px;padding:4px 6px;margin-bottom:3px;box-shadow:0 1px 2px rgba(0,0,0,.05);cursor:pointer;transition:all .15s}
+.history-item:hover{box-shadow:0 2px 5px rgba(0,0,0,.1)}
+.history-item.comment{background:var(--comment-bg);border-left:4px solid #a0aaee}
+.history-item.ai{background:var(--ai-bg);border-left:4px solid #c4c400}
+.history-item.response{background:var(--response-bg);border-left:4px solid #55cc88;margin-left:12px;margin-top:-1px}
+.history-item-header{display:flex;align-items:center;gap:4px;margin-bottom:1px;flex-wrap:wrap;font-size:10px}
+.history-item-body{font-size:10px;overflow:hidden;display:-webkit-box;-webkit-line-clamp:1;-webkit-box-orient:vertical;cursor:pointer}
+.history-item-body.expanded{-webkit-line-clamp:unset;display:block;margin-bottom:2px}
+.history-item-meta{font-size:9px;color:var(--text-muted);margin-top:1px;display:flex;justify-content:space-between;align-items:center;gap:6px}
+
+/* ADMIN PAGE */
+#admin-page{padding:10px 12px}
+.admin-section{background:#fff;border-radius:4px;box-shadow:0 1px 4px rgba(0,0,0,.08);margin-bottom:14px;overflow:hidden}
+.admin-section-header{
+  background:var(--blue);color:#fff;padding:8px 14px;
+  font-size:13px;font-weight:700;display:flex;align-items:center;gap:8px;
+}
+.admin-section-body{padding:3px 12px}
+.data-table{width:100%;border-collapse:collapse;font-size:12px}
+.data-table th{background:var(--blue);color:#fff;padding:8px 10px;text-align:left;font-weight:700}
+.data-table td{padding:7px 10px;border-bottom:1px solid var(--border)}
+.data-table tr:nth-child(even) td{background:#fafafa}
+.data-table tr:hover td{background:#f0f5ff}
+
+/* MODALS */
+#modal-backdrop{display:none;position:fixed;inset:0;background:rgba(0,0,0,.42);z-index:1000}
+#modal-backdrop.open{display:block}
+.modal{
+  display:none;position:fixed;top:50%;left:50%;
+  transform:translate(-50%,-50%);z-index:1001;
+  background:#fff;border-radius:6px;padding:0;
+  width:520px;max-width:calc(100vw - 32px);
+  max-height:calc(100vh - 80px);overflow-y:auto;
+  box-shadow:0 8px 32px rgba(0,0,0,.22);
+  animation:modalIn .18s ease;
+}
+.modal.open{display:block}
+@keyframes modalIn{from{opacity:0;transform:translate(-50%,-52%)}to{opacity:1;transform:translate(-50%,-50%)}}
+.modal-header{background:var(--blue);color:#fff;padding:12px 18px;display:flex;align-items:center;border-radius:6px 6px 0 0}
+.modal-header h3{flex:1;font-size:14px;font-weight:700;color:#fff}
+.modal-close{background:transparent;border:none;color:rgba(255,255,255,.8);font-size:18px;cursor:pointer;padding:0 4px;line-height:1}
+.modal-close:hover{color:#fff}
+.modal-body{padding:16px}
+.modal-footer{padding:12px 16px;border-top:1px solid var(--border);display:flex;justify-content:flex-end;gap:7px}
+.confirm-modal{width:280px}
+.confirm-modal .modal-body{text-align:center;padding:14px 14px}
+.confirm-modal .confirm-icon{font-size:32px;margin-bottom:10px}
+
+/* TOAST */
+#toast-container{position:fixed;bottom:18px;right:18px;z-index:2000;display:flex;flex-direction:column;gap:6px}
+.toast{background:#1a1a1a;color:#fff;padding:8px 14px;border-radius:4px;font-size:12px;min-width:180px;box-shadow:0 4px 12px rgba(0,0,0,.25);animation:toastIn .2s ease;display:flex;align-items:center;gap:8px}
+.toast.success{background:#175e2c;border-left:4px solid #44cc77}
+.toast.error{background:#7a0000;border-left:4px solid var(--red)}
+.toast.info{background:var(--blue-dark);border-left:4px solid #7799ff}
+@keyframes toastIn{from{opacity:0;transform:translateX(20px)}to{opacity:1;transform:translateX(0)}}
+@keyframes toastOut{to{opacity:0;transform:translateX(20px)}}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+
+/* MISC */
+.text-muted{color:var(--text-muted)}.text-red{color:var(--red)}.text-blue{color:var(--blue)}
+.separator{height:1px;background:var(--border);margin:10px 0}
+.hidden{display:none!important}
+.edit-locked{opacity:.4;cursor:not-allowed}
+.debug-box{background:#111;color:#0f0;font-family:monospace;font-size:10px;padding:10px;border-radius:4px;white-space:pre-wrap;overflow-x:auto;max-height:180px}
+::-webkit-scrollbar{width:5px;height:5px}
+::-webkit-scrollbar-track{background:#f0f0f0}
+::-webkit-scrollbar-thumb{background:#bbb;border-radius:3px}
+::-webkit-scrollbar-thumb:hover{background:var(--blue)}
+</style>
+</head>
+<body>
+<div id="pwa-offline-bar" style="display:none;position:fixed;top:0;left:0;right:0;background:#b90303;color:#fff;text-align:center;padding:5px 10px;font-size:12px;z-index:10000">⚠️ You are offline — using cached version</div>
+<script>
+if('serviceWorker' in navigator){
+  navigator.serviceWorker.register('./service-worker.js').catch(function(){});
+}
+window.addEventListener('online', function(){ document.getElementById('pwa-offline-bar').style.display='none'; });
+window.addEventListener('offline', function(){ document.getElementById('pwa-offline-bar').style.display='block'; });
+if(!navigator.onLine){ document.getElementById('pwa-offline-bar').style.display='block'; }
+</script>
+
+<!-- FIXED HEADER -->
+<header id="app-header">
+  <div id="app-header-wrapper">
+    <img class="header-logo" src="data:image/jpeg;base64,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" alt="Cameron Group Logo">
+    <div class="header-title-block">
+      <div class="header-app-name">Issues Management System</div>
+      <div class="header-company-name">The Cameron Group</div>
+      <div class="header-client-line" id="header-client-line"></div>
+    </div>
+    <div class="header-center">
+      <span class="header-page-label" id="header-page-label"></span>
+    </div>
+    <div class="header-right">
+      <div class="header-user-info" id="header-user-info"></div>
+      <button class="btn btn-secondary btn-sm" id="btn-issues-nav" style="display:none" onclick="navigate('issues')">◀ Issues</button>
+      <button class="btn btn-secondary btn-sm" id="btn-admin-nav" style="display:none" onclick="navigate('admin')">Admin</button>
+      <button class="btn btn-secondary btn-sm" id="btn-debug" style="display:none" onclick="toggleDebugModal()">DB</button>
+      <button class="btn btn-danger btn-sm" id="btn-logout" style="display:none" onclick="logout()">Logout</button>
+    </div>
+  </div>
+</header>
+
+<div id="page-container">
+
+<!-- ===== LOGIN PAGE ===== -->
+<div id="login-page" class="hidden">
+  <div class="login-hero">
+    <img class="login-hero-logo" src="data:image/jpeg;base64,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" alt="Cameron Group">
+    <div class="login-hero-text">
+      <h1>Issues Management System</h1>
+      <p>The Cameron Group — Nuclear Consulting</p>
+    </div>
+  </div>
+  <div class="login-card">
+    <h2>Secure Login</h2>
+    <div id="login-msg" style="display:none"></div>
+    <div id="login-form-step1">
+      <div class="form-group">
+        <label>Email Address</label>
+        <input type="email" id="login-email" placeholder="Enter your email address">
+        <div class="field-error" id="err-email"></div>
+      </div>
+      <button class="btn btn-primary" style="width:100%;margin-top:4px" onclick="sendCode()">📱 Send 6-Digit Code</button>
+    </div>
+    <div id="code-section">
+      <div class="separator"></div>
+      <div id="code-sent-msg" class="login-msg success"></div>
+      <div class="form-group">
+        <label>Enter 6-Digit Code</label>
+        <div class="code-input-row">
+          <input type="text" id="login-code" placeholder="_ _ _ _ _ _" maxlength="6" onkeydown="if(event.key==='Enter') verifyCode()">
+          <button class="btn btn-primary" onclick="verifyCode()">✓ Verify</button>
+        </div>
+        <div class="field-error" id="err-code"></div>
+        <div style="font-size:10px;color:var(--text-muted);margin-top:4px" id="attempt-hint"></div>
+      </div>
+      <button class="btn btn-secondary btn-sm" onclick="resetLogin()">← Start Over</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== ISSUES LIST PAGE ===== -->
+<div id="issues-page" class="hidden">
+  <div id="sub-header">
+    <div class="sub-header-row1">
+      <select id="meeting-select" onchange="onMeetingChange()"></select>
+      <button class="btn btn-primary btn-sm" onclick="openAddMeetingModal()">+ Meeting</button>
+      <button class="btn btn-secondary btn-sm" onclick="openRenameMeetingModal()">✏ Rename</button>
+      <div style="flex:1"></div>
+      <span id="filter-count-badge" class="filter-badge hidden"></span>
+      <button class="btn btn-secondary btn-sm" onclick="clearAllFilters()">✕ Clear</button>
+      <div class="filter-dropdown-wrapper">
+        <button class="btn btn-secondary btn-sm" onclick="toggleFilterPanel()">▼ Filters</button>
+        <div class="filter-dropdown-panel" id="filter-panel">
+          <div class="filter-section-title">Status</div>
+          <div class="checkbox-group" id="filter-status-group"></div>
+          <div class="filter-section-title">Priority</div>
+          <div class="checkbox-group" id="filter-priority-group"></div>
+          <div class="filter-section-title">Safety</div>
+          <div class="checkbox-group" id="filter-safety-group"></div>
+          <div class="filter-section-title">Redesign</div>
+          <div class="checkbox-group" id="filter-redesign-group"></div>
+          <div class="filter-section-title">Creator</div>
+          <select id="filter-creator" style="width:100%;margin-top:3px" onchange="applyFilters()"><option value="">All</option></select>
+        </div>
+      </div>
+      <select id="filter-assignee" onchange="applyFilters()" style="max-width:180px;font-size:11px">
+        <option value="">All Assignees</option>
+      </select>
+      <label class="toggle-label"><input type="checkbox" id="toggle-hide-closed-issues" checked onchange="applyFilters()"> Hide Closed</label>
+      <label class="toggle-label"><input type="checkbox" id="toggle-hide-closed-ai" checked onchange="applyFilters()"> Hide Closed A.I.</label>
+      <label class="toggle-label"><input type="checkbox" id="hide-attrs-toggle" checked onchange="toggleHideAttrs()"> Hide Attributes</label>
+    </div>
+    <div class="info-text">💡 Click an issue title to view full history &nbsp;|&nbsp; Items editable within 7 days of creation</div>
+  </div>
+  <div id="main-content">
+    <div class="meeting-title-row">
+      <h2 id="meeting-title-display"></h2>
+    </div>
+    <div class="add-category-row">
+      <input type="text" id="new-cat-name" placeholder="New category name..." onkeydown="if(event.key==='Enter') addCategory()">
+      <button class="btn btn-primary btn-sm" onclick="addCategory()">+ Category</button>
+    </div>
+    <div id="categories-container"></div>
+  </div>
+</div>
+
+<!-- ===== ISSUE HISTORY PAGE ===== -->
+<div id="history-page" class="hidden">
+  <div class="breadcrumb" id="history-breadcrumb"></div>
+  <div style="display:flex;align-items:flex-start;gap:10px;margin-bottom:8px">
+    <div style="flex:1">
+      <div class="history-issue-title" id="history-title"></div>
+      <div class="history-issue-desc" id="history-desc" onclick="expandHistoryDesc(this)"></div>
+      <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:5px" id="history-attrs"></div>
+    </div>
+    <div style="display:flex;gap:5px;flex-shrink:0" id="history-issue-actions"></div>
+  </div>
+  <div class="history-filters">
+    <label class="toggle-label"><input type="checkbox" id="hf-hide-comments" onchange="renderHistoryThread()"> Hide Comments</label>
+    <label class="toggle-label"><input type="checkbox" id="hf-hide-ai" onchange="renderHistoryThread()"> Hide A.I.s</label>
+    <span style="font-size:10px;color:var(--text-muted);margin-left:auto">💡 Click any text to expand full content</span>
+  </div>
+  <div id="history-thread"></div>
+</div>
+
+<!-- ===== ADMIN PAGE ===== -->
+<div id="admin-page" class="hidden">
+  <h2 style="margin-bottom:12px">Administration Panel</h2>
+
+  <!-- Client Company -->
+  <div class="admin-section">
+    <div class="admin-section-header">🏢 Client Company</div>
+    <div class="admin-section-body" style="display:flex;gap:10px;align-items:flex-end">
+      <div class="form-group" style="margin-bottom:0;flex:1;max-width:340px">
+        <label>Client Company Name</label>
+        <input type="text" id="client-company-input" placeholder="e.g. Acme Nuclear Corp.">
+      </div>
+      <button class="btn btn-primary btn-sm" onclick="saveClientCompany()">Save</button>
+    </div>
+  </div>
+
+  <!-- Database Configuration -->
+  <div class="admin-section">
+    <div class="admin-section-header">🗄 Database Configuration</div>
+    <div class="admin-section-body">
+      <div style="margin-bottom:10px">
+        <label style="font-size:11px;font-weight:600;display:block;margin-bottom:4px">Data Mode</label>
+        <select id="cfg-data-mode" onchange="onDataModeChange()" style="width:220px;font-size:12px">
+          <option value="local">Local (browser only)</option>
+          <option value="netlify">Netlify Blobs (cloud)</option>
+          <option value="python">Python server (on-premises)</option>
+        </select>
+      </div>
+      <div id="cfg-netlify-fields" style="display:none">
+        <div class="form-group" style="margin-bottom:6px">
+          <label>Blob Read URL</label>
+          <input type="text" id="cfg-netlify-blob-url" placeholder="https://yoursite.netlify.app/.netlify/blobs/ims-data" style="width:100%;max-width:420px">
+        </div>
+        <div class="form-group" style="margin-bottom:6px">
+          <label>Netlify Site ID</label>
+          <input type="text" id="cfg-netlify-site-id" placeholder="your-site-id" style="width:100%;max-width:420px">
+        </div>
+      </div>
+      <div id="cfg-python-fields" style="display:none">
+        <div class="form-group" style="margin-bottom:6px">
+          <label>Python Server URL</label>
+          <input type="text" id="cfg-python-url" placeholder="http://192.168.1.50:8080" style="width:100%;max-width:420px">
+        </div>
+      </div>
+      <div style="margin-top:10px;display:flex;gap:8px;align-items:center">
+        <button class="btn btn-primary btn-sm" onclick="saveDBConfig()">Save & Reconnect</button>
+        <span id="cfg-status" style="font-size:11px;color:var(--text-muted)"></span>
+      </div>
+      <p style="font-size:10px;color:var(--text-muted);margin-top:8px">
+        Changes take effect immediately. Settings are saved in browser localStorage.
+      </p>
+    </div>
+  </div>
+
+  <!-- Demo Mode -->
+  <div class="admin-section">
+    <div class="admin-section-header">🎮 Demo Mode</div>
+    <div class="admin-section-body" style="display:flex;gap:10px;align-items:center">
+      <label class="toggle-label"><input type="checkbox" id="demo-mode-toggle" onchange="saveDemoMode()"> Enable Demo Mode</label>
+      <span style="font-size:11px;color:var(--text-muted);margin-left:auto">When enabled, login code appears on login page</span>
+    </div>
+  </div>
+
+  <!-- Users -->
+  <div class="admin-section">
+    <div class="admin-section-header">
+      👤 User Management
+      <button class="btn btn-sm" style="background:rgba(255,255,255,.2);color:#fff;margin-left:auto" onclick="openAddUserModal()">+ Add User</button>
+    </div>
+    <div class="admin-section-body">
+      <table class="data-table" id="users-table">
+        <thead><tr><th>Name</th><th>Email</th><th>Company</th><th>Access</th><th>Actions</th></tr></thead>
+        <tbody id="users-tbody"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Meetings -->
+  <div class="admin-section">
+    <div class="admin-section-header">
+      📋 Meeting Management
+      <button class="btn btn-sm" style="background:rgba(255,255,255,.2);color:#fff;margin-left:auto" onclick="openAddMeetingModal()">+ Add Meeting</button>
+    </div>
+    <div class="admin-section-body">
+      <table class="data-table">
+        <thead><tr><th>Meeting Name</th><th>Categories</th><th>Issues</th><th>Created</th><th>Actions</th></tr></thead>
+        <tbody id="meetings-tbody"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Export / Import / Reset -->
+  <div class="admin-section">
+    <div class="admin-section-header">💾 Data Management</div>
+    <div class="admin-section-body" style="display:flex;gap:20px;flex-wrap:wrap">
+      <div>
+        <h3 style="margin-bottom:6px">Export</h3>
+        <p style="font-size:11px;color:var(--text-muted);margin-bottom:8px">Download full database as JSON.</p>
+        <button class="btn btn-primary btn-sm" onclick="exportData()">⬇ Export All Data</button>
+        <div style="margin-top:8px">
+          <button class="btn btn-primary btn-sm" onclick="exportWithApp()">📦 Export App + Data (self-contained)</button>
+        </div>
+      </div>
+      <div style="border-left:1px solid var(--border);padding-left:20px">
+        <h3 style="margin-bottom:6px">Import</h3>
+        <p style="font-size:11px;color:var(--text-muted);margin-bottom:8px">Import a previously exported JSON backup.</p>
+        <div style="display:flex;gap:7px;align-items:center;flex-wrap:wrap">
+          <input type="file" id="import-file" accept=".json" style="width:auto;font-size:11px">
+          <button class="btn btn-secondary btn-sm" onclick="importData('merge')">↪ Merge</button>
+          <button class="btn btn-danger btn-sm" onclick="importData('replace')">⚠ Replace All</button>
+        </div>
+        <div id="import-msg" style="margin-top:6px;font-size:11px"></div>
+      </div>
+      <div style="border-left:1px solid var(--border);padding-left:20px">
+        <h3 style="margin-bottom:6px;color:var(--red)">Reset App</h3>
+        <p style="font-size:11px;color:var(--text-muted);margin-bottom:8px">Clear all data so app can be used fresh by another client.</p>
+        <div class="form-group" style="margin-bottom:6px">
+          <label style="color:var(--red)">Type RESET to confirm:</label>
+          <input type="text" id="reset-confirm-input" placeholder="RESET" style="max-width:160px">
+        </div>
+        <button class="btn btn-danger btn-sm" onclick="resetApp()">🗑 Reset All Data</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Debug -->
+  <div class="admin-section">
+    <div class="admin-section-header">🛠 Debug Tools</div>
+    <div class="admin-section-body">
+      <div style="display:flex;gap:7px;margin-bottom:10px;flex-wrap:wrap">
+        <button class="btn btn-secondary btn-sm" onclick="refreshDebug()">↻ Refresh</button>
+        <button class="btn btn-secondary btn-sm" onclick="location.reload()">↺ Reload App</button>
+      </div>
+      <div id="debug-box" class="debug-box"></div>
+    </div>
+  </div>
+</div>
+
+</div><!-- /page-container -->
+
+<!-- MODAL BACKDROP -->
+<div id="modal-backdrop" onclick="closeModal()"></div>
+
+<!-- ISSUE MODAL -->
+<div class="modal" id="modal-issue">
+  <div class="modal-header"><h3 id="modal-issue-title">Add Issue</h3><button class="modal-close" onclick="closeModal()">✕</button></div>
+  <div class="modal-body">
+    <div class="form-group"><label>Issue Title *</label><input type="text" id="issue-f-title"><div class="field-error" id="issue-err-title"></div></div>
+    <div class="form-group"><label>Description</label><textarea id="issue-f-desc"></textarea></div>
+    <div class="form-row">
+      <div class="form-group"><label>Status</label><select id="issue-f-status"></select></div>
+      <div class="form-group"><label>Priority</label><select id="issue-f-priority"></select></div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label>Safety</label><select id="issue-f-safety"></select></div>
+      <div class="form-group"><label>Redesign</label><select id="issue-f-redesign"></select></div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label>Creator Name *</label><input type="text" id="issue-f-creator"><div class="field-error" id="issue-err-creator"></div></div>
+      <div class="form-group"><label>Creator Email</label><input type="email" id="issue-f-creator-email"></div>
+    </div>
+  </div>
+  <div class="modal-footer"><button class="btn btn-secondary" onclick="closeModal()">Cancel</button><button class="btn btn-primary" onclick="saveIssue()">Save Issue</button></div>
+</div>
+
+<!-- COMMENT MODAL -->
+<div class="modal" id="modal-comment">
+  <div class="modal-header"><h3 id="modal-comment-title">Add Comment</h3><button class="modal-close" onclick="closeModal()">✕</button></div>
+  <div class="modal-body">
+    <div class="form-group"><label>Comment Text *</label><textarea id="comment-f-text"></textarea><div class="field-error" id="comment-err-text"></div></div>
+    <div class="form-row">
+      <div class="form-group"><label>Status</label><select id="comment-f-status"></select></div>
+      <div class="form-group"><label>Creator Name *</label><input type="text" id="comment-f-creator"></div>
+    </div>
+    <div class="form-group"><label>Creator Email</label><input type="email" id="comment-f-creator-email"></div>
+  </div>
+  <div class="modal-footer"><button class="btn btn-secondary" onclick="closeModal()">Cancel</button><button class="btn btn-primary" onclick="saveComment()">Save Comment</button></div>
+</div>
+
+<!-- ACTION ITEM MODAL -->
+<div class="modal" id="modal-ai">
+  <div class="modal-header"><h3 id="modal-ai-title">Add Action Item</h3><button class="modal-close" onclick="closeModal()">✕</button></div>
+  <div class="modal-body">
+    <div class="form-group"><label>Description *</label><textarea id="ai-f-text"></textarea><div class="field-error" id="ai-err-text"></div></div>
+    <div class="form-row">
+      <div class="form-group"><label>Assigned To *</label><select id="ai-f-assigned"><option value="">Select user...</option></select><div class="field-error" id="ai-err-assigned"></div></div>
+      <div class="form-group"><label>Assigned Email</label><input type="email" id="ai-f-assigned-email" readonly style="background:#f5f5f5"></div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label>Due In (days)</label><input type="number" id="ai-f-due" value="7" min="1"></div>
+      <div class="form-group"><label>Reminder (days before)</label><input type="number" id="ai-f-reminder" value="2" min="1"></div>
+      <div class="form-group"><label>Status</label><select id="ai-f-status"></select></div>
+    </div>
+  </div>
+  <div class="modal-footer"><button class="btn btn-secondary" onclick="closeModal()">Cancel</button><button class="btn btn-primary" onclick="saveActionItem()">Save A.I.</button></div>
+</div>
+
+<!-- RESPONSE MODAL -->
+<div class="modal" id="modal-response">
+  <div class="modal-header"><h3 id="modal-response-title">Add Response</h3><button class="modal-close" onclick="closeModal()">✕</button></div>
+  <div class="modal-body">
+    <div class="form-group"><label>Response Text *</label><textarea id="response-f-text"></textarea><div class="field-error" id="response-err-text"></div></div>
+    <div class="form-row">
+      <div class="form-group"><label>Responder Name *</label><input type="text" id="response-f-name"></div>
+      <div class="form-group"><label>Responder Email</label><input type="email" id="response-f-email"></div>
+    </div>
+  </div>
+  <div class="modal-footer"><button class="btn btn-secondary" onclick="closeModal()">Cancel</button><button class="btn btn-primary" onclick="saveResponse()">Save Response</button></div>
+</div>
+
+<!-- CATEGORY MODAL -->
+<div class="modal" id="modal-category">
+  <div class="modal-header"><h3 id="modal-category-title">Edit Category</h3><button class="modal-close" onclick="closeModal()">✕</button></div>
+  <div class="modal-body">
+    <div class="form-group"><label>Category Name *</label><input type="text" id="cat-f-name"><div class="field-error" id="cat-err-name"></div></div>
+  </div>
+  <div class="modal-footer"><button class="btn btn-secondary" onclick="closeModal()">Cancel</button><button class="btn btn-primary" onclick="saveCategory()">Save</button></div>
+</div>
+
+<!-- MEETING MODAL -->
+<div class="modal" id="modal-meeting">
+  <div class="modal-header"><h3 id="modal-meeting-title">Add Meeting</h3><button class="modal-close" onclick="closeModal()">✕</button></div>
+  <div class="modal-body">
+    <div class="form-group"><label>Meeting Name *</label><input type="text" id="meeting-f-name"><div class="field-error" id="meeting-err-name"></div></div>
+  </div>
+  <div class="modal-footer"><button class="btn btn-secondary" onclick="closeModal()">Cancel</button><button class="btn btn-primary" onclick="saveMeeting()">Save Meeting</button></div>
+</div>
+
+<!-- USER MODAL -->
+<div class="modal" id="modal-user">
+  <div class="modal-header"><h3 id="modal-user-title">Add User</h3><button class="modal-close" onclick="closeModal()">✕</button></div>
+  <div class="modal-body">
+    <div class="form-row">
+      <div class="form-group"><label>Full Name *</label><input type="text" id="user-f-name"><div class="field-error" id="user-err-name"></div></div>
+      <div class="form-group"><label>Company</label><input type="text" id="user-f-company"></div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label>Email <span style="font-size:9px;color:#888">(leave blank for assignee-only)</span></label><input type="email" id="user-f-email"><div class="field-error" id="user-err-email"></div></div>
+    </div>
+    <div class="form-group"><label>Access Level</label><select id="user-f-access"><option value="User">User</option><option value="Admin">Admin</option></select></div>
+  </div>
+  <div class="modal-footer"><button class="btn btn-secondary" onclick="closeModal()">Cancel</button><button class="btn btn-primary" onclick="saveUser()">Save User</button></div>
+</div>
+
+
+<!-- MOVE ISSUE MODAL -->
+<div class="modal" id="modal-move-issue">
+  <div class="modal-header"><h3>Move Issue to Category</h3><button class="modal-close" onclick="closeModal()">✕</button></div>
+  <div class="modal-body">
+    <p style="font-size:12px;color:#666;margin-bottom:12px">Select the category to move this issue to:</p>
+    <div class="form-group">
+      <label>Target Category</label>
+      <select id="move-issue-cat-select" style="width:100%"></select>
+    </div>
+  </div>
+  <div class="modal-footer">
+    <button class="btn btn-secondary" onclick="closeModal()">Cancel</button>
+    <button class="btn btn-primary" onclick="confirmMoveIssue()">Move Issue</button>
+  </div>
+</div>
+
+<!-- CONFIRM MODAL -->
+<div class="modal confirm-modal" id="modal-confirm">
+  <div class="modal-header"><h3 id="confirm-title">Confirm</h3><button class="modal-close" onclick="closeModal()">✕</button></div>
+  <div class="modal-body">
+    <div class="confirm-icon" id="confirm-icon">⚠️</div>
+    <strong id="confirm-msg"></strong>
+    <p id="confirm-sub" style="margin-top:5px;font-size:12px;color:var(--text-muted)"></p>
+  </div>
+  <div class="modal-footer">
+    <button class="btn btn-secondary" onclick="closeModal()">Cancel</button>
+    <button class="btn btn-danger" id="confirm-ok-btn">Confirm</button>
+  </div>
+</div>
+
+<!-- DEBUG MODAL -->
+<div class="modal" id="modal-debug" style="width:600px">
+  <div class="modal-header"><h3>Debug Info</h3><button class="modal-close" onclick="closeModal()">✕</button></div>
+  <div class="modal-body">
+    <div id="debug-session-box" class="debug-box" style="margin-bottom:8px"></div>
+    <div id="debug-storage-box" class="debug-box"></div>
+  </div>
+  <div class="modal-footer"><button class="btn btn-secondary" onclick="closeModal()">Close</button></div>
+</div>
+
+<div id="toast-container"></div>
+
+<script>
+/* ================================================================
+   CONFIGURATION — edit this block per deployment
+================================================================ */
+const CONFIG = {
+  // 'local'   — single-user, data in browser localStorage (default / offline)
+  // 'netlify' — multi-user, Netlify Blobs cloud storage
+  // 'python'  — multi-user, Python flat-file server (on-premises)
+  dataMode: 'local',
+
+  // Netlify Blobs settings (required when dataMode === 'netlify')
+  netlifyBlobUrl: '',  // public read URL e.g. 'https://yoursite.netlify.app/.netlify/blobs/ims-data'
+  netlifySiteId:  '',  // your Netlify site ID (found in Site Settings)
+
+  // Python server settings (required when dataMode === 'python')
+  pythonUrl: '',       // e.g. 'http://192.168.1.50:8080'
+};
+
+/* ================================================================
+   CONSTANTS & DATA LAYER
+================================================================ */
+const STORAGE_KEY   = 'imsData_v1';
+const SESSION_KEY   = 'imsSession_v1';
+const ISSUE_STATUSES  = ['Opened','In Progress','Discussion','Recommendation','Resolution','Action Taken','Need Information','Action Completed','Closed'];
+const COMMENT_STATUSES= ISSUE_STATUSES;
+const AI_STATUSES     = ['Opened','In Progress','Need Info','Closed'];
+const PRIORITIES      = ['None','Normal','High','Critical'];
+const SAFETIES        = ['None','Potential','Minor','Severe'];
+const REDESIGNS       = ['None','Potential','Yes'];
+
+function defaultData() {
+  return {
+    appVersion:'1.0', lastSyncDate: new Date().toISOString(), clientCompany:'',
+    admin:[
+      {id:'admin_0001',name:'Bob Hessler',email:'bob@cameron.com',mobile:'+1-555-0101',company:'The Cameron Group',accessLevel:'Admin',createdDate:'2026-01-01T00:00:00Z',active:true},
+      {id:'admin_0002',name:'Robert Hessler',email:'bob@rwhessler.com',mobile:'',company:'The Cameron Group',accessLevel:'Admin',createdDate:'2026-01-01T00:00:00Z',active:true},
+      {id:'admin_0003',name:'Bill Webster',email:'bwebster00@yahoo.com',mobile:'',company:'The Cameron Group',accessLevel:'Admin',createdDate:'2026-01-01T00:00:00Z',active:true},
+      {id:'admin_0004',name:'David Blessing',email:'blessingdl@netscape.net',mobile:'',company:'The Cameron Group',accessLevel:'User',createdDate:'2026-01-01T00:00:00Z',active:true},
+      {id:'admin_0005',name:'David Paul',email:'dave@thecamerongroupinc.com',mobile:'',company:'The Cameron Group',accessLevel:'User',createdDate:'2026-01-01T00:00:00Z',active:true}
+    ],
+    meetings:[{
+      id:'mtg_0001', name:'Current Issues', createdDate:'2026-04-01T10:00:00Z',
+      categories:[{
+        id:'cat_0001', name:'Safety Review', meetingId:'mtg_0001', createdDate:'2026-04-01T10:15:00Z',
+        issues:[{
+          id:'iss_0001', title:'Cooling System Temperature Anomaly',
+          description:'Observed temperature rise of 5°C above baseline during Q2 testing. Potential impact on reactor coolant pump performance. Requires immediate thermal analysis and root cause investigation.',
+          categoryId:'cat_0001', status:'In Progress', priority:'Critical', safety:'Severe', redesign:'Potential',
+          creatorName:'Alice Chen', creatorEmail:'alice@cameron.com',
+          createdDate:'2026-04-15T09:30:00Z', lastEditDate:'2026-04-20T14:00:00Z',
+          comments:[{
+            id:'cmt_0001', issueId:'iss_0001',
+            text:'Team reviewed data. Root cause likely thermal conductivity issue in secondary coolant loop.',
+            creatorName:'Bob Hessler', creatorEmail:'bob@cameron.com',
+            status:'In Progress', createdDate:'2026-04-16T11:00:00Z', lastEditDate:'2026-04-16T11:00:00Z',
+            actionItems:[{
+              id:'ai_0001', commentId:'cmt_0001',
+              text:'Run thermal simulation models for 3 scenarios',
+              assignedTo:'Dr. Sarah Mills', assignedEmail:'sarah@client.com',
+              dueInDays:7, reminderDays:2, status:'In Progress',
+              createdDate:'2026-04-16T11:15:00Z',
+              responses:[{
+                id:'rsp_0001', aiId:'ai_0001',
+                text:'Completed scenarios 1 & 2. Scenario 3 TBD by Friday.',
+                responderName:'Dr. Sarah Mills', responderEmail:'sarah@client.com',
+                createdDate:'2026-04-22T16:30:00Z'
+              }]
+            }]
+          }]
+        }]
+      }]
+    }]
+  };
+}
+
+let db = null;
+let _syncUnsubscribe = null; // holds realtime unsubscribe fn
+
+/* ----------------------------------------------------------------
+   DATA MIGRATION — runs after any load to ensure schema consistency
+---------------------------------------------------------------- */
+function migrateDB() {
+  if (!db.clientCompany) db.clientCompany = '';
+  for (const m of db.meetings) for (const cat of m.categories) for (const iss of cat.issues) {
+    if (!iss.actionItems) iss.actionItems = [];
+    iss.comments = iss.comments.filter(cmt => {
+      if (cmt._auto) {
+        for (const ai of cmt.actionItems) { ai.commentId = null; ai.issueId = iss.id; iss.actionItems.push(ai); }
+        return false;
+      }
+      return true;
+    });
+  }
+}
+
+/* ----------------------------------------------------------------
+   ADAPTER A — localStorage (local / offline / standalone)
+---------------------------------------------------------------- */
+function loadDB_local() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    db = raw ? JSON.parse(raw) : defaultData();
+  } catch(e) { db = defaultData(); }
+  migrateDB();
+}
+function saveDB_local() {
+  try {
+    db.lastSyncDate = new Date().toISOString();
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(db));
+  } catch(e) { showToast('Save failed — storage full?', 'error'); }
+}
+
+/* ----------------------------------------------------------------
+   ADAPTER B — Netlify Blobs (cloud)
+   Reads: direct GET to public blob URL (no function needed)
+   Writes: POST to Netlify Function /.netlify/functions/save-blob
+---------------------------------------------------------------- */
+async function loadDB_netlify() {
+  const { netlifyBlobUrl } = CONFIG;
+  try {
+    const r = await fetch(netlifyBlobUrl + '?t=' + Date.now()); // cache-bust
+    if (!r.ok) throw new Error('Blob not found');
+    const text = await r.text();
+    db = JSON.parse(text);
+  } catch(e) {
+    // First run or missing blob — push defaults up
+    db = defaultData();
+    await saveDB_netlify();
+  }
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(db));
+  migrateDB();
+}
+async function saveDB_netlify() {
+  db.lastSyncDate = new Date().toISOString();
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(db));
+  try {
+    const r = await fetch('/.netlify/functions/save-blob', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ data: db })
+    });
+    if (!r.ok) {
+      const txt = await r.text().catch(()=>'');
+      throw new Error('HTTP ' + r.status + (txt ? ': ' + txt.slice(0,120) : ''));
+    }
+  } catch(e) {
+    console.error('saveDB_netlify:', e.message);
+    showToast('Netlify save failed — ' + e.message, 'error');
+  }
+}
+function subscribeNetlify() {
+  // Poll every 30 seconds to pick up changes from other users
+  setInterval(async () => {
+    await loadDB_netlify();
+    if (currentPage === 'issues') renderCategories();
+    else if (currentPage === 'history') renderHistoryPage();
+  }, 30000);
+}
+
+/* ----------------------------------------------------------------
+   ADAPTER C — Python flat-file server (on-premises)
+   Single Python script on internal network serves JSON over HTTP
+---------------------------------------------------------------- */
+async function loadDB_python() {
+  const { pythonUrl } = CONFIG;
+  try {
+    const r = await fetch(pythonUrl + '/api/data');
+    if (!r.ok) throw new Error('Python server error: ' + r.status);
+    db = await r.json();
+  } catch(e) {
+    showToast('Python server load failed — using local cache', 'error');
+    loadDB_local(); return;
+  }
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(db));
+  migrateDB();
+}
+async function saveDB_python() {
+  const { pythonUrl } = CONFIG;
+  db.lastSyncDate = new Date().toISOString();
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(db));
+  try {
+    const r = await fetch(pythonUrl + '/api/data', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(db)
+    });
+    if (!r.ok) throw new Error('Save failed: ' + r.status);
+  } catch(e) { showToast('Python server save failed — saved locally only', 'error'); }
+}
+function subscribePython() {
+  // Poll every 30 seconds to pick up changes from other users
+  setInterval(async () => {
+    await loadDB_python();
+    if (currentPage === 'issues') renderCategories();
+    else if (currentPage === 'history') renderHistoryPage();
+  }, 30000);
+}
+
+/* ----------------------------------------------------------------
+   DISPATCHER — loadDB / saveDB route to correct adapter
+---------------------------------------------------------------- */
+async function loadDB() {
+  // Apply any persisted config overrides saved via admin panel
+  const saved = localStorage.getItem('ims_db_config');
+  if (saved) {
+    try {
+      const sc = JSON.parse(saved);
+      CONFIG.dataMode       = sc.dataMode       || CONFIG.dataMode;
+      CONFIG.netlifyBlobUrl = sc.netlifyBlobUrl  || CONFIG.netlifyBlobUrl;
+      CONFIG.netlifySiteId  = sc.netlifySiteId   || CONFIG.netlifySiteId;
+      CONFIG.pythonUrl      = sc.pythonUrl       || CONFIG.pythonUrl;
+    } catch(e) {}
+  }
+  if (CONFIG.dataMode === 'netlify') { await loadDB_netlify(); return; }
+  if (CONFIG.dataMode === 'python')  { await loadDB_python();  return; }
+  loadDB_local();
+}
+async function saveDB() {
+  if (CONFIG.dataMode === 'netlify') { await saveDB_netlify(); return; }
+  if (CONFIG.dataMode === 'python')  { await saveDB_python();  return; }
+  saveDB_local();
+}
+function startSync() {
+  if (CONFIG.dataMode === 'netlify') subscribeNetlify();
+  if (CONFIG.dataMode === 'python')  subscribePython();
+}
+
+let session = null;
+function loadSession() {
+  try { const raw = sessionStorage.getItem(SESSION_KEY); session = raw ? JSON.parse(raw) : null; }
+  catch(e) { session = null; }
+}
+function saveSession(user) {
+  session = {isLoggedIn:true, currentUser:user, loginTimestamp:new Date().toISOString()};
+  sessionStorage.setItem(SESSION_KEY, JSON.stringify(session));
+}
+function clearSession() { session = null; sessionStorage.removeItem(SESSION_KEY); }
+
+function genId(prefix) { const a=new Uint32Array(1);crypto.getRandomValues(a);return prefix+'_'+(a[0]%9000+1000)+(Date.now()%1000); }
+function isEditable(d) { return (Date.now()-new Date(d).getTime()) < 7*24*3600*1000; }
+function formatDate(iso) {
+  if(!iso) return '';
+  try { return new Date(iso).toLocaleString('en-US',{month:'short',day:'numeric',year:'numeric',hour:'numeric',minute:'2-digit'}); }
+  catch(e) { return iso; }
+}
+function formatDateShort(iso) {
+  if(!iso) return '';
+  try { return new Date(iso).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}); }
+  catch(e) { return iso; }
+}
+function escHtml(s) {
+  if(!s) return '';
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#039;');
+}
+function populateSelect(id,opts,sel) {
+  const el=document.getElementById(id);
+  if(!el) return;
+  el.innerHTML=opts.map(o=>`<option value="${escHtml(o)}" ${o===sel?'selected':''}>${escHtml(o)}</option>`).join('');
+}
+function setError(id,msg) { const el=document.getElementById(id); if(el) el.textContent=msg; }
+function clearErrors(ids) { ids.forEach(id=>{ const el=document.getElementById(id); if(el) el.textContent=''; }); }
+
+/* ================================================================
+   ROUTING
+================================================================ */
+let currentPage='login', currentMeetingId=null, currentIssueId=null;
+
+function navigate(page, params) {
+  if(page!=='login' && (!session||!session.isLoggedIn)) { page='login'; }
+  document.querySelectorAll('#page-container > div').forEach(d=>d.classList.add('hidden'));
+  const pages={login:'login-page',issues:'issues-page',history:'history-page',admin:'admin-page'};
+  const el=document.getElementById(pages[page]);
+  if(el) el.classList.remove('hidden');
+  currentPage=page;
+  updateHeader(page);
+  if(page==='login') { renderLogin(); return; }
+  if(page==='issues') { renderIssuesPage(); return; }
+  if(page==='history') { if(params) currentIssueId=params.issueId; renderHistoryPage(); return; }
+  if(page==='admin') { renderAdminPage(); return; }
+}
+
+function updateHeader(page) {
+  const loggedIn=session&&session.isLoggedIn;
+  document.getElementById('btn-logout').style.display=loggedIn?'':'none';
+  const isAdmin=loggedIn&&session.currentUser.accessLevel==='Admin';
+  document.getElementById('btn-admin-nav').style.display=isAdmin?'':'none';
+  document.getElementById('btn-debug').style.display=isAdmin?'':'none';
+  document.getElementById('btn-issues-nav').style.display=(loggedIn&&page!=='issues')?'':'none';
+
+  // client line in header
+  const clientLine=document.getElementById('header-client-line');
+  if(clientLine) clientLine.textContent = db&&db.clientCompany ? 'Client: '+db.clientCompany : '';
+
+  const labels={login:'Login',issues:'Issues List',history:'Issue History',admin:'Admin Panel'};
+  document.getElementById('header-page-label').textContent=labels[page]||'';
+  if(loggedIn) {
+    document.getElementById('header-user-info').innerHTML=
+      `<strong>${escHtml(session.currentUser.name)}</strong>${escHtml(session.currentUser.accessLevel)}`;
+  } else {
+    document.getElementById('header-user-info').innerHTML='';
+  }
+}
+
+/* ================================================================
+   LOGIN
+================================================================ */
+let _smsCode=null, _loginAttempts=0;
+
+function renderLogin() {
+  document.getElementById('login-msg').style.display='none';
+  document.getElementById('code-section').style.display='none';
+  document.getElementById('login-email').value='';
+  document.getElementById('login-code').value='';
+  clearErrors(['err-email','err-code']);
+  _smsCode=null; _loginAttempts=0;
+}
+
+function sendCode() {
+  clearErrors(['err-email']);
+  const email=document.getElementById('login-email').value.trim();
+  if(!email||!/\S+@\S+\.\S+/.test(email)) { setError('err-email','Please enter a valid email address.'); return; }
+
+  const user=db.admin.find(u=>u.email&&u.email.toLowerCase()===email.toLowerCase()&&u.active!==false);
+  if(!user) { showLoginMsg('Email not found on authorized list. Contact your administrator.','error'); return; }
+
+  const _arr=new Uint32Array(1);
+  crypto.getRandomValues(_arr);
+  _smsCode=String(100000+(_arr[0]%900000));
+  _loginAttempts=0;
+  const demoMode=true; // DEMO ALWAYS ON — remove this line once email is configured
+  const msgText=demoMode?
+    `📋 DEMO MODE: code is provided below. In normal operational mode, this would be sent to your email address.`:
+    `✓ Code sent to ${email}. `;
+  document.getElementById('code-sent-msg').innerHTML=`<strong>${msgText}</strong>`;
+  if(demoMode) {
+    document.getElementById('code-sent-msg').innerHTML+=`<div style="margin-top:8px;padding:8px;background:#fffde5;border-radius:4px;font-family:monospace;font-weight:bold;font-size:16px;text-align:center;letter-spacing:4px;">${_smsCode}</div>`;
+  }
+  document.getElementById('code-section').style.display='block';
+  document.getElementById('login-msg').style.display='none';
+  document.getElementById('login-code').focus();
+  document.getElementById('login-email').dataset.userId=user.id;
+  showToast(demoMode?'Demo Mode active':'Code sent.','info');
+}
+
+function verifyCode() {
+  clearErrors(['err-code']);
+  const entered=document.getElementById('login-code').value.trim();
+  if(entered.length!==6) { setError('err-code','Please enter the 6-digit code.'); return; }
+  if(entered!==_smsCode) {
+    _loginAttempts++;
+    if(_loginAttempts>=3) { setError('err-code','Too many attempts. Please start over.'); setTimeout(resetLogin,2000); }
+    else { setError('err-code',`Invalid code. ${3-_loginAttempts} attempt(s) remaining.`); }
+    return;
+  }
+  const user=db.admin.find(u=>u.id===document.getElementById('login-email').dataset.userId);
+  saveSession(user);
+  currentMeetingId=db.meetings[0]?.id||null;
+  showToast(`Welcome, ${user.name}!`,'success');
+  navigate('issues');
+}
+
+function resetLogin() {
+  document.getElementById('code-section').style.display='none';
+  document.getElementById('login-code').value='';
+  document.getElementById('login-msg').style.display='none';
+  _smsCode=null; _loginAttempts=0;
+}
+
+function showLoginMsg(msg,type) {
+  const el=document.getElementById('login-msg');
+  el.className='login-msg '+type; el.textContent=msg; el.style.display='block';
+}
+
+function logout() { 
+  if(confirm('Are you sure you want to logout?')) {
+    clearSession(); 
+    showToast('Logged out.','info'); 
+    navigate('login'); 
+  }
+}
+
+/* ================================================================
+   ISSUES LIST PAGE
+================================================================ */
+let _activeFilters={status:[],priority:[],safety:[],redesign:[],creator:'',assignee:'',hideClosed:true,hideClosedAI:true};
+
+function renderIssuesPage() {
+  document.body.classList.add('hide-attrs');
+  document.getElementById('hide-attrs-toggle').checked=true;
+  populateMeetingDropdown();
+  buildFilterCheckboxes();
+  refreshAssigneeDropdown();
+  restoreFilterToggles();
+  renderCategories();
+}
+
+function populateMeetingDropdown() {
+  const sel=document.getElementById('meeting-select');
+  sel.innerHTML=db.meetings.map(m=>`<option value="${m.id}">${escHtml(m.name)}</option>`).join('');
+  if(!currentMeetingId||!db.meetings.find(m=>m.id===currentMeetingId)) currentMeetingId=db.meetings[0]?.id;
+  sel.value=currentMeetingId;
+  updateMeetingTitle();
+}
+
+function onMeetingChange() {
+  currentMeetingId=document.getElementById('meeting-select').value;
+  updateMeetingTitle(); renderCategories();
+}
+
+function updateMeetingTitle() {
+  const mtg=findMeeting(currentMeetingId);
+  document.getElementById('meeting-title-display').textContent=mtg?mtg.name:'';
+}
+
+function buildFilterCheckboxes() {
+  buildCheckGroup('filter-status-group',ISSUE_STATUSES,'status');
+  buildCheckGroup('filter-priority-group',PRIORITIES,'priority');
+  buildCheckGroup('filter-safety-group',SAFETIES,'safety');
+  buildCheckGroup('filter-redesign-group',REDESIGNS,'redesign');
+}
+
+function buildCheckGroup(cid,vals,key) {
+  const c=document.getElementById(cid);
+  c.innerHTML=vals.map(v=>`<label class="checkbox-label"><input type="checkbox" value="${v}" onchange="onFilterCheck('${key}',this)"> ${escHtml(v)}</label>`).join('');
+}
+
+function onFilterCheck(key,cb) {
+  if(cb.checked) { if(!_activeFilters[key].includes(cb.value)) _activeFilters[key].push(cb.value); }
+  else _activeFilters[key]=_activeFilters[key].filter(v=>v!==cb.value);
+  applyFilters();
+}
+
+function restoreFilterToggles() {
+  document.getElementById('toggle-hide-closed-issues').checked=_activeFilters.hideClosed;
+  document.getElementById('toggle-hide-closed-ai').checked=_activeFilters.hideClosedAI;
+}
+
+function applyFilters() {
+  _activeFilters.hideClosed=document.getElementById('toggle-hide-closed-issues').checked;
+  _activeFilters.hideClosedAI=document.getElementById('toggle-hide-closed-ai').checked;
+  _activeFilters.creator=document.getElementById('filter-creator').value;
+  _activeFilters.assignee=document.getElementById('filter-assignee').value;
+  const total=_activeFilters.status.length+_activeFilters.priority.length+_activeFilters.safety.length+_activeFilters.redesign.length+(_activeFilters.creator?1:0)+(_activeFilters.assignee?1:0);
+  const badge=document.getElementById('filter-count-badge');
+  if(total>0) { badge.textContent=total+' filter'+(total>1?'s':''); badge.classList.remove('hidden'); }
+  else badge.classList.add('hidden');
+  renderCategories();
+}
+
+function clearAllFilters() {
+  _activeFilters={status:[],priority:[],safety:[],redesign:[],creator:'',assignee:'',hideClosed:true,hideClosedAI:true};
+  buildFilterCheckboxes();
+  document.getElementById('filter-creator').value='';
+  document.getElementById('filter-assignee').value='';
+  document.getElementById('toggle-hide-closed-issues').checked=true;
+  document.getElementById('toggle-hide-closed-ai').checked=true;
+  document.getElementById('filter-count-badge').classList.add('hidden');
+  renderCategories();
+}
+
+function refreshAssigneeDropdown() {
+  const sel=document.getElementById('filter-assignee');
+  const prev=sel.value;
+  const a=new Set();
+  for(const m of db.meetings) for(const c of m.categories) for(const i of c.issues) {
+    for(const ai of (i.actionItems||[])) if(ai.assignedTo) a.add(ai.assignedTo);
+    for(const cm of i.comments) for(const ai of cm.actionItems) if(ai.assignedTo) a.add(ai.assignedTo);
+  }
+  sel.innerHTML='<option value="">All Assignees</option>'+[...a].sort().map(x=>`<option value="${escHtml(x)}" ${x===prev?'selected':''}>${escHtml(x)}</option>`).join('');
+}
+
+function toggleFilterPanel() { document.getElementById('filter-panel').classList.toggle('open'); }
+function toggleHideAttrs() {
+  const checked = document.getElementById('hide-attrs-toggle').checked;
+  if(checked) {
+    document.body.classList.add('hide-attrs');
+  } else {
+    document.body.classList.remove('hide-attrs');
+  }
+}
+document.addEventListener('click',function(e) {
+  const p=document.getElementById('filter-panel');
+  if(p&&p.classList.contains('open')&&!p.contains(e.target)&&!e.target.closest('.filter-dropdown-wrapper')) p.classList.remove('open');
+});
+
+function issueMatchesFilters(iss) {
+  if(_activeFilters.hideClosed&&iss.status==='Closed') return false;
+  if(_activeFilters.status.length&&!_activeFilters.status.includes(iss.status)) return false;
+  if(_activeFilters.priority.length&&!_activeFilters.priority.includes(iss.priority)) return false;
+  if(_activeFilters.safety.length&&!_activeFilters.safety.includes(iss.safety)) return false;
+  if(_activeFilters.redesign.length&&!_activeFilters.redesign.includes(iss.redesign)) return false;
+  if(_activeFilters.creator&&iss.creatorName!==_activeFilters.creator) return false;
+  if(_activeFilters.assignee) {
+      const inIssueAIs=(iss.actionItems||[]).some(a=>a.assignedTo===_activeFilters.assignee);
+      const inCmtAIs=iss.comments.some(c=>c.actionItems.some(a=>a.assignedTo===_activeFilters.assignee));
+      if(!inIssueAIs&&!inCmtAIs) return false;
+    }
+  return true;
+}
+
+function renderCategories() {
+  const mtg=findMeeting(currentMeetingId);
+  const cont=document.getElementById('categories-container');
+  if(!mtg) { cont.innerHTML='<p class="text-muted">No meeting selected.</p>'; return; }
+  cont.innerHTML=mtg.categories.map(cat=>renderCategoryBlock(cat)).join('');
+}
+
+function renderCategoryBlock(cat) {
+  const mtg=findMeeting(currentMeetingId);
+  const catIdx=mtg?.categories.findIndex(c=>c.id===cat.id)??-1;
+  const canMoveUp=catIdx>0;
+  const canMoveDown=catIdx>=0&&catIdx<mtg.categories.length-1;
+  const filtered=cat.issues.filter(issueMatchesFilters);
+  const issHtml=filtered.length===0?'<div class="category-empty">No matching issues.</div>':filtered.map(i=>renderIssueCard(i)).join('');
+  return `<div class="category-block" id="cat-block-${cat.id}">
+    <div class="category-header"><span class="cat-name">📁 ${escHtml(cat.name)}</span>
+    <div style="display:flex;gap:2px">
+      <button class="cat-menu-btn" ${canMoveUp?'':'disabled'} title="Move up" onclick="moveCategoryUp('${cat.id}')">▲</button>
+      <button class="cat-menu-btn" ${canMoveDown?'':'disabled'} title="Move down" onclick="moveCategoryDown('${cat.id}')">▼</button>
+      <button class="cat-menu-btn" onclick="openCatMenu('${cat.id}')">⋯</button>
+    </div>
+    </div>
+    <div class="category-body">
+      ${issHtml}
+      <div class="category-add-row"><button class="btn btn-primary btn-sm" onclick="openAddIssueModal('${cat.id}')">+ Issue</button></div>
+    </div>
+  </div>`;
+}
+
+function renderIssueCard(iss) {
+  const editable=isEditable(iss.createdDate);
+  const bgClass='bg-'+iss.status.replace(/\s+/g,'-');
+  const statusCls='status-'+iss.status.replace(/\s+/g,'-');
+
+  const attrsHtml=[
+    `<span class="status-badge ${statusCls}">${escHtml(iss.status)}</span>`,
+    iss.priority!=='None'?`<span class="attr-tag priority-${iss.priority.toLowerCase()}">Pri: ${escHtml(iss.priority)}</span>`:'',
+    iss.safety!=='None'?`<span class="attr-tag safety-${iss.safety.toLowerCase()}">Safety: ${escHtml(iss.safety)}</span>`:'',
+    iss.redesign!=='None'?`<span class="attr-tag redesign-${iss.redesign.toLowerCase()}">Redesign: ${escHtml(iss.redesign)}</span>`:'',
+    `<span class="nested-meta-item">${formatDateShort(iss.lastEditDate||iss.createdDate)}</span>`,
+    `<span class="nested-meta-item">By: ${escHtml(iss.creatorName)}</span>`
+  ].filter(Boolean).join('');
+
+  // Render comments (with their AIs), then issue-level AIs
+  const commentHtml=iss.comments.map(cmt=>renderCommentAndAIs(cmt)).join('');
+  const issueAIHtml=(iss.actionItems||[]).filter(ai=>!(_activeFilters.hideClosedAI&&ai.status==='Closed')).map(ai=>renderAICard(ai)).join('');
+  const nestedHtml=commentHtml+issueAIHtml;
+
+  return `<div class="issue-card ${bgClass}" id="issue-card-${iss.id}">
+    <div class="issue-layout">
+      <div class="issue-main">
+        <span class="issue-title-link" onclick="navigate('history',{issueId:'${iss.id}'})">
+          ${escHtml(iss.title)}
+        </span>
+        <div class="issue-desc">${escHtml(iss.description)}</div>
+      </div>
+      <div class="issue-right">
+        <div class="issue-attrs-col">${attrsHtml}</div>
+        <div class="issue-action-btns">
+          <button class="btn btn-primary btn-xs" onclick="navigate('history',{issueId:'${iss.id}'})">📄 History</button>
+          <button class="btn btn-secondary btn-xs" onclick="openAddCommentModal('${iss.id}')">+ Comment</button>
+          <button class="btn btn-secondary btn-xs" onclick="openAddAIToIssueModal('${iss.id}')">+ A.I.</button>
+          <button class="btn btn-secondary btn-xs" onclick="openMoveIssueModal('${iss.id}')" title="Move to different category">⇅ Move</button>
+          ${editable
+            ?`<button class="btn btn-secondary btn-xs" onclick="openEditIssueModal('${iss.id}')">Edit</button>
+               <button class="btn btn-danger btn-xs" onclick="confirmDelete('issue','${iss.id}')">Del</button>`
+            :`<span class="lock-icon" title="7-day edit window expired">🔒</span>`
+          }
+        </div>
+      </div>
+    </div>
+    <div class="nested-items">${nestedHtml}</div>
+  </div>`;
+}
+
+function renderCommentAndAIs(cmt) {
+  const editable=isEditable(cmt.createdDate);
+  const statusCls='status-'+cmt.status.replace(/\s+/g,'-');
+
+  // Comments and their AIs side by side (same level)
+  let rows='';
+
+  // Comment row
+  rows+=`<div class="nested-row" style="margin-bottom:3px">
+    <div class="comment-card">
+      <div class="nested-card-layout">
+        <span class="nested-type-badge badge-comment">Comment</span>
+        <div class="nested-card-body">
+          <div class="nested-text">${escHtml(cmt.text)}</div>
+        </div>
+        <div class="nested-card-right">
+          <span class="status-badge ${statusCls}">${escHtml(cmt.status)}</span>
+          <span class="nested-meta-item">By: ${escHtml(cmt.creatorName)}</span>
+          <span class="nested-meta-item">${formatDateShort(cmt.createdDate)}</span>
+          <div class="nested-actions-row">
+            ${editable
+              ?`<button class="btn btn-secondary btn-xs" onclick="openEditCommentModal('${cmt.id}')">Edit</button>
+                 <button class="btn btn-danger btn-xs" onclick="confirmDelete('comment','${cmt.id}')">Del</button>`
+              :`<span class="lock-icon">🔒</span>`
+            }
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>`;
+
+  // Comment-level AIs
+  for(const ai of cmt.actionItems) {
+    if(_activeFilters.hideClosedAI&&ai.status==='Closed') continue;
+    rows+=renderAICard(ai);
+  }
+  return rows;
+}
+
+function renderAICard(ai) {
+  const aiEditable=isEditable(ai.createdDate);
+  const aiStatusCls='status-'+ai.status.replace(/\s+/g,'-');
+  const aiCreatedDate=new Date(ai.createdDate);
+  const aiDueDate=new Date(aiCreatedDate.getTime()+(ai.dueInDays*24*60*60*1000));
+  const aiDueDateStr=aiDueDate.toLocaleDateString('en-US',{month:'short',day:'numeric'});
+  let html=`<div class="nested-row" style="margin-bottom:3px">
+      <div class="ai-card">
+        <div class="nested-card-layout">
+          <span class="nested-type-badge badge-ai">A.I.</span>
+          <div class="nested-card-body">
+            <div class="nested-text">${escHtml(ai.text)}</div>
+          </div>
+          <div class="nested-card-right">
+            <span class="status-badge ${aiStatusCls}">${escHtml(ai.status)}</span>
+            <span class="nested-meta-item"><b>→</b> ${escHtml(ai.assignedTo)}</span>
+            <span class="nested-meta-item">Due: ${aiDueDateStr}</span>
+            <div class="nested-actions-row">
+              <button class="btn btn-secondary btn-xs" onclick="openAddResponseModal('${ai.id}')">+ Resp</button>
+              ${aiEditable
+                ?`<button class="btn btn-secondary btn-xs" onclick="openEditAIModal('${ai.id}')">Edit</button>
+                   <button class="btn btn-danger btn-xs" onclick="confirmDelete('ai','${ai.id}')">Del</button>`
+                :`<span class="lock-icon">🔒</span>`
+              }
+            </div>
+          </div>
+        </div>`;
+  for(const rsp of ai.responses) {
+    const rspEditable=isEditable(rsp.createdDate);
+    html+=`<div class="response-card" style="margin-left:8px">
+          <div class="response-layout">
+            <span class="nested-type-badge badge-response">Resp</span>
+            <div class="response-body">
+              <div class="nested-text" style="-webkit-line-clamp:unset;display:block;white-space:pre-wrap;word-break:break-word">${escHtml(rsp.text)}</div>
+            </div>
+            <div class="response-right">
+              <span class="nested-meta-item">${formatDateShort(rsp.createdDate)}</span>
+              <span class="nested-meta-item">By: ${escHtml(rsp.responderName)}</span>
+              <div class="nested-actions-row">
+                ${rspEditable
+                  ?`<button class="btn btn-secondary btn-xs" onclick="openEditResponseModal('${rsp.id}')">Edit</button>
+                     <button class="btn btn-danger btn-xs" onclick="confirmDelete('response','${rsp.id}')">Del</button>`
+                  :`<span class="lock-icon">🔒</span>`
+                }
+              </div>
+            </div>
+          </div>
+        </div>`;
+  }
+  html+=`</div></div>`;
+  return html;
+}
+
+/* ================================================================
+   ISSUE HISTORY PAGE
+================================================================ */
+function renderHistoryPage() {
+  const found=findIssueAnywhere(currentIssueId);
+  if(!found) { navigate('issues'); return; }
+  const {mtg,cat,iss}=found;
+
+  document.getElementById('history-breadcrumb').innerHTML=
+    `<a onclick="navigate('issues')">◀ Issues</a> › ${escHtml(mtg.name)} › ${escHtml(cat.name)} › ${escHtml(iss.title)}`;
+  document.getElementById('history-title').textContent=iss.title;
+  document.getElementById('history-desc').textContent=iss.description;
+  document.getElementById('history-desc').dataset.expanded='false';
+
+  const editable=isEditable(iss.createdDate);
+  const statusCls='status-'+iss.status.replace(/\s+/g,'-');
+  document.getElementById('history-attrs').innerHTML=[
+    `<span class="status-badge ${statusCls}">${escHtml(iss.status)}</span>`,
+    iss.priority!=='None'?`<span class="attr-tag priority-${iss.priority.toLowerCase()}">Priority: ${escHtml(iss.priority)}</span>`:'',
+    iss.safety!=='None'?`<span class="attr-tag safety-${iss.safety.toLowerCase()}">Safety: ${escHtml(iss.safety)}</span>`:'',
+    iss.redesign!=='None'?`<span class="attr-tag redesign-${iss.redesign.toLowerCase()}">Redesign: ${escHtml(iss.redesign)}</span>`:'',
+    `<span class="attr-tag">By: ${escHtml(iss.creatorName)}</span>`,
+    `<span class="attr-tag">Created: ${formatDateShort(iss.createdDate)}</span>`
+  ].filter(Boolean).join('');
+
+  document.getElementById('history-issue-actions').innerHTML=editable
+    ?`<button class="btn btn-secondary btn-sm" onclick="openEditIssueModal('${iss.id}')">Edit</button>
+      <button class="btn btn-danger btn-sm" onclick="confirmDelete('issue','${iss.id}')">Delete</button>`
+    :`<button class="btn btn-secondary btn-sm edit-locked" disabled>🔒 Locked</button>`;
+
+  renderHistoryThread();
+}
+
+function expandHistoryDesc(el) {
+  if(el.dataset.expanded==='false') { el.style.webkitLineClamp='unset'; el.style.display='block'; el.dataset.expanded='true'; }
+  else { el.style.webkitLineClamp='3'; el.style.display='-webkit-box'; el.dataset.expanded='false'; }
+}
+
+function toggleExpand(el) {
+  el.classList.toggle('expanded');
+}
+
+function renderHistoryThread() {
+  const found=findIssueAnywhere(currentIssueId);
+  if(!found) return;
+  const {iss}=found;
+  const hideComments=document.getElementById('hf-hide-comments').checked;
+  const hideAI=document.getElementById('hf-hide-ai').checked;
+  let html='';
+
+  for(const cmt of iss.comments) {
+    if(!hideComments) {
+      const editable=isEditable(cmt.createdDate);
+      const statusCls='status-'+cmt.status.replace(/\s+/g,'-');
+      html+=`<div class="history-item comment" id="hist-cmt-${cmt.id}">
+        <div class="history-item-header">
+          <span class="nested-type-badge badge-comment">Comment</span>
+          <span class="status-badge ${statusCls}">${escHtml(cmt.status)}</span>
+          <span style="margin-left:auto;display:flex;gap:4px">
+            <button class="btn btn-secondary btn-xs" onclick="openAddAIModal('${cmt.id}')">+ A.I.</button>
+            ${editable
+              ?`<button class="btn btn-secondary btn-xs" onclick="openEditCommentModal('${cmt.id}')">Edit</button>
+                 <button class="btn btn-danger btn-xs" onclick="confirmDelete('comment','${cmt.id}')">Del</button>`
+              :`<span class="lock-icon">🔒</span>`
+            }
+          </span>
+        </div>
+        <div class="history-item-body" onclick="toggleExpand(this)" title="Click to expand full text">${escHtml(cmt.text)}</div>
+        <div class="history-item-meta">
+          <span>By <strong>${escHtml(cmt.creatorName)}</strong> · ${formatDate(cmt.createdDate)}</span>
+        </div>
+      </div>`;
+    }
+    for(const ai of cmt.actionItems) {
+      if(!hideAI) {
+        const editable=isEditable(ai.createdDate);
+        const aiStatusCls='status-'+ai.status.replace(/\s+/g,'-');
+        html+=`<div class="history-item ai" id="hist-ai-${ai.id}">
+          <div class="history-item-header">
+            <span class="nested-type-badge badge-ai">A.I.</span>
+            <span class="status-badge ${aiStatusCls}">${escHtml(ai.status)}</span>
+            <span style="margin-left:auto;display:flex;gap:4px">
+              <button class="btn btn-secondary btn-xs" onclick="openAddResponseModal('${ai.id}')">+ Response</button>
+              ${editable
+                ?`<button class="btn btn-secondary btn-xs" onclick="openEditAIModal('${ai.id}')">Edit</button>
+                   <button class="btn btn-danger btn-xs" onclick="confirmDelete('ai','${ai.id}')">Del</button>`
+                :`<span class="lock-icon">🔒</span>`
+              }
+            </span>
+          </div>
+          <div class="history-item-body" onclick="toggleExpand(this)" title="Click to expand full text">${escHtml(ai.text)}</div>
+          <div class="history-item-meta">
+            ${(()=>{const d=new Date(ai.createdDate);const dd=new Date(d.getTime()+(ai.dueInDays*24*60*60*1000));const ds=dd.toLocaleDateString('en-US',{month:'short',day:'numeric'});return `→ <strong>${escHtml(ai.assignedTo)}</strong> · Due: ${ds}`;})()}
+            <span>${formatDate(ai.createdDate)}</span>
+          </div>
+        </div>`;
+      }
+      for(const rsp of ai.responses) {
+        const rEditable=isEditable(rsp.createdDate);
+        html+=`<div class="history-item response" id="hist-rsp-${rsp.id}">
+          <div class="history-item-header">
+            <span class="nested-type-badge badge-response">Response</span>
+            <span style="margin-left:auto;display:flex;gap:4px">
+              ${rEditable
+                ?`<button class="btn btn-secondary btn-xs" onclick="openEditResponseModal('${rsp.id}')">Edit</button>
+                   <button class="btn btn-danger btn-xs" onclick="confirmDelete('response','${rsp.id}')">Del</button>`
+                :`<span class="lock-icon">🔒</span>`
+              }
+            </span>
+          </div>
+          <div class="history-item-body" onclick="toggleExpand(this)" title="Click to expand full text">${escHtml(rsp.text)}</div>
+          <div class="history-item-meta">
+            <span>By <strong>${escHtml(rsp.responderName)}</strong> · ${formatDate(rsp.createdDate)}</span>
+          </div>
+        </div>`;
+      }
+    }
+  }
+
+  if(!html) html='<p class="text-muted" style="padding:12px">No items match current filters.</p>';
+  html+=`<div style="margin-top:12px;padding:10px;background:#fff;border-radius:4px;border:1px dashed var(--border);display:flex;gap:6px;flex-wrap:wrap">
+    <strong style="font-size:11px;color:var(--text-muted);width:100%;margin-bottom:3px">Add to this issue:</strong>
+    <button class="btn btn-secondary btn-sm" onclick="openAddCommentModal('${currentIssueId}')">+ Comment</button>
+  </div>`;
+  document.getElementById('history-thread').innerHTML=html;
+}
+
+/* ================================================================
+   ADMIN PAGE
+================================================================ */
+function renderAdminPage() {
+  const ci=document.getElementById('client-company-input');
+  if(ci) ci.value=db.clientCompany||'';
+  loadDemoMode();
+  loadDBConfig();
+  renderUsersTable();
+  renderMeetingsTable();
+  refreshDebug();
+}
+
+function loadDBConfig() {
+  const modeEl = document.getElementById('cfg-data-mode');
+  if (!modeEl) return;
+  modeEl.value = CONFIG.dataMode || 'local';
+  document.getElementById('cfg-netlify-blob-url').value = CONFIG.netlifyBlobUrl || '';
+  document.getElementById('cfg-netlify-site-id').value  = CONFIG.netlifySiteId  || '';
+  document.getElementById('cfg-python-url').value       = CONFIG.pythonUrl      || '';
+  onDataModeChange();
+}
+
+function onDataModeChange() {
+  const mode = document.getElementById('cfg-data-mode').value;
+  document.getElementById('cfg-netlify-fields').style.display = mode === 'netlify' ? 'block' : 'none';
+  document.getElementById('cfg-python-fields').style.display  = mode === 'python'  ? 'block' : 'none';
+}
+
+async function saveDBConfig() {
+  const mode    = document.getElementById('cfg-data-mode').value;
+  const blobUrl = document.getElementById('cfg-netlify-blob-url').value.trim();
+  const siteId  = document.getElementById('cfg-netlify-site-id').value.trim();
+  const pyUrl   = document.getElementById('cfg-python-url').value.trim();
+
+  if (mode === 'netlify' && !blobUrl) {
+    showToast('Please enter the Netlify Blob Read URL.', 'error'); return;
+  }
+  if (mode === 'python' && !pyUrl) {
+    showToast('Please enter the Python Server URL.', 'error'); return;
+  }
+
+  CONFIG.dataMode       = mode;
+  CONFIG.netlifyBlobUrl = blobUrl;
+  CONFIG.netlifySiteId  = siteId;
+  CONFIG.pythonUrl      = pyUrl;
+
+  localStorage.setItem('ims_db_config', JSON.stringify({
+    dataMode: mode, netlifyBlobUrl: blobUrl, netlifySiteId: siteId, pythonUrl: pyUrl
+  }));
+
+  const status = document.getElementById('cfg-status');
+  status.textContent = 'Connecting...';
+  try {
+    await loadDB();
+    startSync();
+    status.textContent = '\u2713 Connected (' + mode + ')';
+    showToast('Database config saved and connected.', 'success');
+    renderAdminPage();
+  } catch(e) {
+    status.textContent = '\u2717 Connection failed';
+    showToast('Connection failed — check settings.', 'error');
+  }
+}
+
+function saveClientCompany() {
+  db.clientCompany=document.getElementById('client-company-input').value.trim();
+  saveDB();
+  updateHeader(currentPage);
+  showToast('Client company saved.','success');
+}
+
+function saveDemoMode() {
+  const toggle=document.getElementById('demo-mode-toggle');
+  const demoEnabled=toggle.checked;
+  const action=demoEnabled?'enable':'disable';
+  const icon=demoEnabled?'🎮':'🔒';
+  const msg=demoEnabled
+    ? 'Enable Demo Mode? Login codes will appear on the login page instead of being sent by email.'
+    : 'Disable Demo Mode? Login codes will no longer be shown on the login page.';
+  // Revert the checkbox immediately — only set it if user confirms
+  toggle.checked=!demoEnabled;
+  openConfirm('Confirm Demo Mode Change',icon,msg,'',()=>{
+    toggle.checked=demoEnabled;
+    localStorage.setItem('ims_demo_mode',demoEnabled?'true':'false');
+    showToast(demoEnabled?'Demo Mode enabled.':'Demo Mode disabled.','success');
+  },'Yes, '+action.charAt(0).toUpperCase()+action.slice(1),'btn-primary');
+}
+
+function loadDemoMode() {
+  // Default to demo mode ON if no preference saved yet
+  const stored=localStorage.getItem('ims_demo_mode');
+  const demoEnabled=stored===null?true:stored==='true';
+  if(stored===null) localStorage.setItem('ims_demo_mode','true');
+  if(document.getElementById('demo-mode-toggle')) {
+    document.getElementById('demo-mode-toggle').checked=demoEnabled;
+  }
+  return demoEnabled;
+}
+
+function renderUsersTable() {
+  document.getElementById('users-tbody').innerHTML=db.admin.map(u=>`
+    <tr>
+      <td>${escHtml(u.name)}</td><td>${escHtml(u.email||'<span style="color:#aaa;font-style:italic">assignee only</span>')}
+      </td>
+      <td>${escHtml(u.company||'')}</td>
+      <td><span class="attr-tag">${escHtml(u.accessLevel)}</span></td>
+      <td>
+        <button class="btn btn-secondary btn-xs" onclick="openEditUserModal('${u.id}')">Edit</button>
+        <button class="btn btn-danger btn-xs" onclick="confirmDelete('user','${u.id}')">Del</button>
+      </td>
+    </tr>`).join('');
+}
+
+function renderMeetingsTable() {
+  document.getElementById('meetings-tbody').innerHTML=db.meetings.map(m=>{
+    const nc=m.categories.length;
+    const ni=m.categories.reduce((s,c)=>s+c.issues.length,0);
+    return `<tr>
+      <td><strong>${escHtml(m.name)}</strong></td><td>${nc}</td><td>${ni}</td>
+      <td>${formatDateShort(m.createdDate)}</td>
+      <td>
+        <button class="btn btn-secondary btn-xs" onclick="openRenameMeetingModalFor('${m.id}')">Rename</button>
+        <button class="btn btn-danger btn-xs" onclick="confirmDelete('meeting','${m.id}')">Del</button>
+      </td>
+    </tr>`;
+  }).join('');
+}
+
+function refreshDebug() {
+  const size=JSON.stringify(localStorage).length;
+  const box=document.getElementById('debug-box');
+  if(box) box.textContent=`LocalStorage: ~${(size/1024).toFixed(1)} KB\nUsers: ${db.admin.length} | Meetings: ${db.meetings.length}\nApp version: ${db.appVersion}\nLast sync: ${db.lastSyncDate}`;
+}
+
+function toggleDebugModal() {
+  document.getElementById('debug-session-box').textContent=JSON.stringify(session,null,2);
+  const size=JSON.stringify(localStorage).length;
+  document.getElementById('debug-storage-box').textContent=`LocalStorage: ~${(size/1024).toFixed(1)} KB\n`+JSON.stringify({appVersion:db.appVersion,meetings:db.meetings.length,users:db.admin.length},null,2);
+  openModal('modal-debug');
+}
+
+async function exportData() {
+  // Reload from backend first to guarantee we export the latest data
+  await loadDB();
+  const json=JSON.stringify(db,null,2);
+  const blob=new Blob([json],{type:'application/json'});
+  const url=URL.createObjectURL(blob);
+  const d=new Date().toISOString().slice(0,10).replace(/-/g,'');
+  const a=document.createElement('a'); a.href=url; a.download=`ims_backup_${d}.json`; a.click();
+  URL.revokeObjectURL(url);
+  showToast('Data exported.','success');
+}
+
+async function exportWithApp() {
+  showToast('Preparing export...','info');
+
+  // Ensure db has the latest data
+  await loadDB();
+  const exportTs = new Date().toISOString();
+  const d = exportTs.slice(0,10).replace(/-/g,'');
+  const dataJson = JSON.stringify(db);
+
+  // Fetch clean pristine source HTML from server (avoids all DOM state issues)
+  let sourceHtml;
+  try {
+    const r = await fetch(window.location.href, {cache:'no-store'});
+    sourceHtml = await r.text();
+  } catch(e) {
+    sourceHtml = document.documentElement.outerHTML;
+  }
+
+  // Replace CONFIG block entirely
+  const cfgStart = sourceHtml.indexOf('const CONFIG = {');
+  const cfgEnd   = sourceHtml.indexOf('};', cfgStart) + 2;
+  const newConfig = 'const CONFIG = {dataMode:"local",netlifyBlobUrl:"",netlifySiteId:"",pythonUrl:""};';
+  let html = sourceHtml.slice(0, cfgStart) + newConfig + sourceHtml.slice(cfgEnd);
+
+  // Build the baked-in loadDB that always loads the snapshot
+  const snapshotBlock = [
+    '// SNAPSHOT ' + exportTs,
+    'const _PRELOADED_DATA=' + dataJson + ';',
+    'async function loadDB(){db=JSON.parse(JSON.stringify(_PRELOADED_DATA));localStorage.setItem(STORAGE_KEY,JSON.stringify(db));migrateDB();}',
+    'async function saveDB(){saveDB_local();}',
+    'function startSync(){}',
+    'async function _orig_loadDB_noop(){'
+  ].join('\n');
+
+  // Replace the loadDB dispatcher (first occurrence of 'async function loadDB() {')
+  const ldMarker = 'async function loadDB() {';
+  const ldIdx = html.indexOf(ldMarker);
+  if (ldIdx > -1) {
+    html = html.slice(0, ldIdx) + snapshotBlock + html.slice(ldIdx + ldMarker.length);
+  }
+
+  // Strip PWA tags that fail on file://
+  [
+    '<link rel="manifest" href="./manifest.json">',
+    '<meta name="mobile-web-app-capable" content="yes">',
+    '<meta name="apple-mobile-web-app-capable" content="yes">',
+    '<meta name="apple-mobile-web-app-status-bar-style" content="default">',
+    '<meta name="apple-mobile-web-app-title" content="IMS">',
+    '<meta name="theme-color" content="#293b85">'
+  ].forEach(function(tag) { html = html.split(tag).join(''); });
+
+  // Remove service worker script block
+  var swIdx = html.indexOf('serviceWorker');
+  if (swIdx > -1) {
+    var swStart = html.lastIndexOf('<script>', swIdx);
+    var swEnd = html.indexOf('<\/script>', swIdx);
+    if (swEnd === -1) swEnd = html.indexOf('</' + 'script>', swIdx);
+    swEnd += 9;
+    if (swStart > -1 && swEnd > swStart) html = html.slice(0, swStart) + html.slice(swEnd);
+  }
+
+  // Neutralise offline bar
+  html = html.split('<div id="pwa-offline-bar"').join('<div id="pwa-offline-bar-x" style="display:none" ');
+
+  var blob = new Blob([html], {type:'text/html'});
+  var url = URL.createObjectURL(blob);
+  var a = document.createElement('a');
+  a.href = url; a.download = 'IMS_CameronGroup_' + d + '.html'; a.click();
+  URL.revokeObjectURL(url);
+  showToast('Export complete!', 'success');
+}
+
+function importData(mode) {
+  const file=document.getElementById('import-file').files[0];
+  if(!file) { showToast('Select a JSON file first.','error'); return; }
+  const reader=new FileReader();
+  reader.onload=function(e) {
+    try {
+      const imp=JSON.parse(e.target.result);
+      if(!imp.meetings||!imp.admin) throw new Error('Invalid schema');
+      if(mode==='replace') { db=imp; }
+      else {
+        for(const m of imp.meetings) if(!db.meetings.find(x=>x.id===m.id)) db.meetings.push(m);
+        for(const u of imp.admin) if(!db.admin.find(x=>x.id===u.id)) db.admin.push(u);
+      }
+      saveDB(); showToast(`Data ${mode==='replace'?'replaced':'merged'}.`,'success');
+      document.getElementById('import-msg').textContent='✓ Import successful.';
+      renderAdminPage();
+    } catch(err) {
+      document.getElementById('import-msg').textContent='✗ '+err.message;
+      showToast('Import failed: '+err.message,'error');
+    }
+  };
+  reader.readAsText(file);
+}
+
+function resetApp() {
+  const val=document.getElementById('reset-confirm-input').value.trim();
+  if(val!=='RESET') { showToast('Type RESET in the confirmation field first.','error'); return; }
+  openConfirm('Reset All Data','🗑️','This will permanently delete ALL data and restore defaults.','This cannot be undone.',()=>{
+    localStorage.removeItem(STORAGE_KEY);
+    db=defaultData(); saveDB();
+    document.getElementById('reset-confirm-input').value='';
+    showToast('App reset to defaults.','info');
+    renderAdminPage();
+  });
+}
+
+/* ================================================================
+   MODAL SYSTEM
+================================================================ */
+let _currentModal=null, _modalContext={};
+
+function openModal(id) {
+  closeModal();
+  const m=document.getElementById(id);
+  if(!m) return;
+  m.classList.add('open');
+  document.getElementById('modal-backdrop').classList.add('open');
+  _currentModal=id;
+}
+
+function closeModal() {
+  document.querySelectorAll('.modal.open').forEach(m=>m.classList.remove('open'));
+  document.getElementById('modal-backdrop').classList.remove('open');
+  _currentModal=null;
+}
+
+document.addEventListener('keydown',e=>{ if(e.key==='Escape') closeModal(); });
+
+function openConfirm(title,icon,msg,sub,onConfirm,btnText,btnClass) {
+  document.getElementById('confirm-title').textContent=title;
+  document.getElementById('confirm-icon').textContent=icon;
+  document.getElementById('confirm-msg').textContent=msg;
+  document.getElementById('confirm-sub').textContent=sub||'';
+  const okBtn=document.getElementById('confirm-ok-btn');
+  okBtn.textContent=btnText||'Confirm';
+  okBtn.className='btn '+(btnClass||'btn-danger');
+  okBtn.onclick=()=>{closeModal();onConfirm();};
+  openModal('modal-confirm');
+}
+
+/* ISSUE MODAL */
+function populateIssueForm(iss) {
+  populateSelect('issue-f-status',ISSUE_STATUSES,iss?.status||'Opened');
+  populateSelect('issue-f-priority',PRIORITIES,iss?.priority||'None');
+  populateSelect('issue-f-safety',SAFETIES,iss?.safety||'None');
+  populateSelect('issue-f-redesign',REDESIGNS,iss?.redesign||'None');
+  document.getElementById('issue-f-title').value=iss?.title||'';
+  document.getElementById('issue-f-desc').value=iss?.description||'';
+  document.getElementById('issue-f-creator').value=iss?.creatorName||(session?.currentUser?.name||'');
+  document.getElementById('issue-f-creator-email').value=iss?.creatorEmail||(session?.currentUser?.email||'');
+  clearErrors(['issue-err-title','issue-err-creator']);
+}
+
+function openAddIssueModal(catId) {
+  _modalContext={mode:'add',catId};
+  document.getElementById('modal-issue-title').textContent='Add Issue';
+  populateIssueForm(null); openModal('modal-issue');
+}
+
+function openEditIssueModal(issueId) {
+  const found=findIssueAnywhere(issueId);
+  if(!found) return;
+  _modalContext={mode:'edit',issueId};
+  document.getElementById('modal-issue-title').textContent='Edit Issue';
+  populateIssueForm(found.iss); openModal('modal-issue');
+}
+
+function saveIssue() {
+  const title=document.getElementById('issue-f-title').value.trim();
+  const creator=document.getElementById('issue-f-creator').value.trim();
+  if(!title) { setError('issue-err-title','Title is required.'); return; }
+  if(!creator) { setError('issue-err-creator','Creator required.'); return; }
+  const now=new Date().toISOString();
+  if(_modalContext.mode==='add') {
+    const cat=(()=>{ for(const m of db.meetings) for(const c of m.categories) if(c.id===_modalContext.catId) return c; })();
+    if(!cat) return;
+    cat.issues.push({
+      id:genId('iss'),title,description:document.getElementById('issue-f-desc').value.trim(),
+      categoryId:cat.id,status:document.getElementById('issue-f-status').value,
+      priority:document.getElementById('issue-f-priority').value,
+      safety:document.getElementById('issue-f-safety').value,
+      redesign:document.getElementById('issue-f-redesign').value,
+      creatorName:creator,creatorEmail:document.getElementById('issue-f-creator-email').value.trim(),
+      createdDate:now,lastEditDate:now,comments:[],actionItems:[]
+    });
+    showToast('Issue added.','success');
+  } else {
+    const found=findIssueAnywhere(_modalContext.issueId);
+    if(!found) return;
+    Object.assign(found.iss,{
+      title,description:document.getElementById('issue-f-desc').value.trim(),
+      status:document.getElementById('issue-f-status').value,
+      priority:document.getElementById('issue-f-priority').value,
+      safety:document.getElementById('issue-f-safety').value,
+      redesign:document.getElementById('issue-f-redesign').value,
+      creatorName:creator,creatorEmail:document.getElementById('issue-f-creator-email').value.trim(),
+      lastEditDate:now
+    });
+    showToast('Issue updated.','success');
+  }
+  saveDB(); closeModal(); refreshAfterEdit();
+}
+
+/* COMMENT MODAL */
+function populateCommentForm(cmt) {
+  populateSelect('comment-f-status',COMMENT_STATUSES,cmt?.status||'Opened');
+  document.getElementById('comment-f-text').value=cmt?.text||'';
+  document.getElementById('comment-f-creator').value=cmt?.creatorName||(session?.currentUser?.name||'');
+  document.getElementById('comment-f-creator-email').value=cmt?.creatorEmail||(session?.currentUser?.email||'');
+  clearErrors(['comment-err-text']);
+}
+
+function openAddCommentModal(issueId) {
+  _modalContext={mode:'add',issueId};
+  document.getElementById('modal-comment-title').textContent='Add Comment';
+  populateCommentForm(null); openModal('modal-comment');
+}
+
+function openEditCommentModal(commentId) {
+  const found=findCommentAnywhere(commentId);
+  if(!found) return;
+  _modalContext={mode:'edit',commentId};
+  document.getElementById('modal-comment-title').textContent='Edit Comment';
+  populateCommentForm(found.cmt); openModal('modal-comment');
+}
+
+function saveComment() {
+  const text=document.getElementById('comment-f-text').value.trim();
+  if(!text) { setError('comment-err-text','Comment text required.'); return; }
+  const now=new Date().toISOString();
+  const newStatus=document.getElementById('comment-f-status').value;
+
+  if(_modalContext.mode==='add') {
+    const found=findIssueAnywhere(_modalContext.issueId);
+    if(!found) return;
+    found.iss.comments.push({
+      id:genId('cmt'),issueId:_modalContext.issueId,text,
+      creatorName:document.getElementById('comment-f-creator').value.trim(),
+      creatorEmail:document.getElementById('comment-f-creator-email').value.trim(),
+      status:newStatus,createdDate:now,lastEditDate:now,actionItems:[]
+    });
+    // Auto-update issue status to match latest comment
+    found.iss.status=newStatus;
+    found.iss.lastEditDate=now;
+    showToast('Comment added. Issue status updated.','success');
+  } else {
+    const found=findCommentAnywhere(_modalContext.commentId);
+    if(!found) return;
+    Object.assign(found.cmt,{
+      text,status:newStatus,
+      creatorName:document.getElementById('comment-f-creator').value.trim(),
+      creatorEmail:document.getElementById('comment-f-creator-email').value.trim(),
+      lastEditDate:now
+    });
+    showToast('Comment updated.','success');
+  }
+  saveDB(); closeModal(); refreshAfterEdit();
+}
+
+/* AI MODAL */
+function populateAssigneeDropdown() {
+  const sel=document.getElementById('ai-f-assigned');
+  const users=db.admin.filter(u=>u.active!==false).sort((a,b)=>a.name.localeCompare(b.name));
+  sel.innerHTML='<option value="">Select user...</option>'+users.map(u=>
+    `<option value="${escHtml(u.name)}" data-email="${escHtml(u.email)}">${escHtml(u.name)} (${escHtml(u.accessLevel)})</option>`
+  ).join('');
+  sel.onchange=function() {
+    const opt=sel.options[sel.selectedIndex];
+    document.getElementById('ai-f-assigned-email').value=opt.dataset.email||'';
+  };
+}
+
+function populateAIForm(ai) {
+  populateAssigneeDropdown();
+  populateSelect('ai-f-status',AI_STATUSES,ai?.status||'Opened');
+  document.getElementById('ai-f-text').value=ai?.text||'';
+  document.getElementById('ai-f-due').value=ai?.dueInDays??7;
+  document.getElementById('ai-f-reminder').value=ai?.reminderDays??2;
+  // Set assigned dropdown
+  const sel=document.getElementById('ai-f-assigned');
+  if(ai?.assignedTo) {
+    for(const opt of sel.options) { if(opt.value===ai.assignedTo) { opt.selected=true; break; } }
+    document.getElementById('ai-f-assigned-email').value=ai.assignedEmail||'';
+  }
+  clearErrors(['ai-err-text','ai-err-assigned']);
+}
+
+
+function openAddAIToIssueModal(issueId) {
+  _modalContext={mode:'add-to-issue',issueId};
+  document.getElementById('modal-ai-title').textContent='Add Action Item';
+  populateAIForm(null); openModal('modal-ai');
+}
+
+function openAddAIModal(commentId) {
+  _modalContext={mode:'add',commentId};
+  document.getElementById('modal-ai-title').textContent='Add Action Item';
+  populateAIForm(null); openModal('modal-ai');
+}
+
+function openEditAIModal(aiId) {
+  const found=findAIAnywhere(aiId);
+  if(!found) return;
+  _modalContext={mode:'edit',aiId};
+  document.getElementById('modal-ai-title').textContent='Edit Action Item';
+  populateAIForm(found.ai); openModal('modal-ai');
+}
+
+function saveActionItem() {
+  const text=document.getElementById('ai-f-text').value.trim();
+  const assigned=document.getElementById('ai-f-assigned').value;
+  if(!text) { setError('ai-err-text','Description required.'); return; }
+  if(!assigned) { setError('ai-err-assigned','Assignee required.'); return; }
+  const now=new Date().toISOString();
+  if(_modalContext.mode==='add-to-issue') {
+    // Add AI directly to issue.actionItems[]
+    const issFound=findIssueAnywhere(_modalContext.issueId);
+    if(!issFound) return;
+    if(!issFound.iss.actionItems) issFound.iss.actionItems=[];
+    issFound.iss.actionItems.push({
+      id:genId('ai'),issueId:_modalContext.issueId,text,
+      assignedTo:assigned,assignedEmail:document.getElementById('ai-f-assigned-email').value,
+      dueInDays:parseInt(document.getElementById('ai-f-due').value)||7,
+      reminderDays:parseInt(document.getElementById('ai-f-reminder').value)||2,
+      status:document.getElementById('ai-f-status').value,
+      createdDate:now,responses:[]
+    });
+    showToast('Action item added.','success');
+  } else if(_modalContext.mode==='add') {
+    const found=findCommentAnywhere(_modalContext.commentId);
+    if(!found) return;
+    found.cmt.actionItems.push({
+      id:genId('ai'),commentId:_modalContext.commentId,text,
+      assignedTo:assigned,assignedEmail:document.getElementById('ai-f-assigned-email').value,
+      dueInDays:parseInt(document.getElementById('ai-f-due').value)||7,
+      reminderDays:parseInt(document.getElementById('ai-f-reminder').value)||2,
+      status:document.getElementById('ai-f-status').value,
+      createdDate:now,responses:[]
+    });
+    showToast('Action item added.','success');
+  } else {
+    const found=findAIAnywhere(_modalContext.aiId);
+    if(!found) return;
+    Object.assign(found.ai,{
+      text,assignedTo:assigned,assignedEmail:document.getElementById('ai-f-assigned-email').value,
+      dueInDays:parseInt(document.getElementById('ai-f-due').value)||7,
+      reminderDays:parseInt(document.getElementById('ai-f-reminder').value)||2,
+      status:document.getElementById('ai-f-status').value
+    });
+    showToast('Action item updated.','success');
+  }
+  saveDB(); closeModal(); refreshAfterEdit();
+}
+
+/* RESPONSE MODAL */
+function populateResponseForm(rsp) {
+  document.getElementById('response-f-text').value=rsp?.text||'';
+  document.getElementById('response-f-name').value=rsp?.responderName||(session?.currentUser?.name||'');
+  document.getElementById('response-f-email').value=rsp?.responderEmail||(session?.currentUser?.email||'');
+  clearErrors(['response-err-text']);
+}
+
+function openAddResponseModal(aiId) {
+  _modalContext={mode:'add',aiId};
+  document.getElementById('modal-response-title').textContent='Add Response';
+  populateResponseForm(null); openModal('modal-response');
+}
+
+function openEditResponseModal(rspId) {
+  for(const m of db.meetings) for(const c of m.categories) for(const i of c.issues) {
+    const allAIs=[...(i.actionItems||[]),...i.comments.flatMap(cm=>cm.actionItems)];
+    for(const ai of allAIs) for(const r of ai.responses)
+      if(r.id===rspId) {
+        _modalContext={mode:'edit',rspId,aiId:ai.id};
+        document.getElementById('modal-response-title').textContent='Edit Response';
+        populateResponseForm(r); openModal('modal-response'); return;
+      }
+  }
+}
+
+function saveResponse() {
+  const text=document.getElementById('response-f-text').value.trim();
+  if(!text) { setError('response-err-text','Response text required.'); return; }
+  const now=new Date().toISOString();
+  if(_modalContext.mode==='add') {
+    const found=findAIAnywhere(_modalContext.aiId);
+    if(!found) return;
+    found.ai.responses.push({
+      id:genId('rsp'),aiId:_modalContext.aiId,text,
+      responderName:document.getElementById('response-f-name').value.trim(),
+      responderEmail:document.getElementById('response-f-email').value.trim(),
+      createdDate:now
+    });
+    showToast('Response added.','success');
+  } else {
+    for(const m of db.meetings) for(const c of m.categories) for(const i of c.issues)
+      for(const cm of i.comments) for(const ai of cm.actionItems) for(const r of ai.responses)
+        if(r.id===_modalContext.rspId) {
+          r.text=text;
+          r.responderName=document.getElementById('response-f-name').value.trim();
+          r.responderEmail=document.getElementById('response-f-email').value.trim();
+        }
+    showToast('Response updated.','success');
+  }
+  saveDB(); closeModal(); refreshAfterEdit();
+}
+
+/* CATEGORY */
+function moveCategoryUp(catId) {
+  const mtg=findMeeting(currentMeetingId);
+  if(!mtg) return;
+  const idx=mtg.categories.findIndex(c=>c.id===catId);
+  if(idx<=0) return;
+  [mtg.categories[idx-1],mtg.categories[idx]]=[mtg.categories[idx],mtg.categories[idx-1]];
+  saveDB();
+  renderCategories();
+}
+
+function moveCategoryDown(catId) {
+  const mtg=findMeeting(currentMeetingId);
+  if(!mtg) return;
+  const idx=mtg.categories.findIndex(c=>c.id===catId);
+  if(idx<0||idx>=mtg.categories.length-1) return;
+  [mtg.categories[idx],mtg.categories[idx+1]]=[mtg.categories[idx+1],mtg.categories[idx]];
+  saveDB();
+  renderCategories();
+}
+
+function openCatMenu(catId) {
+  openConfirm('Category Actions','📁','What would you like to do?','',()=>{});
+  document.getElementById('confirm-ok-btn').textContent='Rename';
+  document.getElementById('confirm-ok-btn').onclick=()=>{closeModal();openRenameCategoryModal(catId);};
+  const footer=document.querySelector('#modal-confirm .modal-footer');
+  const existing=footer.querySelector('.del-cat-btn');
+  if(!existing) {
+    const btn=document.createElement('button');
+    btn.className='btn btn-danger del-cat-btn';btn.textContent='Delete';
+    btn.onclick=()=>{closeModal();confirmDelete('category',catId);};
+    footer.insertBefore(btn,footer.firstChild);
+  }
+}
+
+function openRenameCategoryModal(catId) {
+  const cat=(()=>{for(const m of db.meetings) for(const c of m.categories) if(c.id===catId) return c;})();
+  if(!cat) return;
+  _modalContext={mode:'edit',catId};
+  document.getElementById('modal-category-title').textContent='Rename Category';
+  document.getElementById('cat-f-name').value=cat.name;
+  clearErrors(['cat-err-name']); openModal('modal-category');
+}
+
+function saveCategory() {
+  const name=document.getElementById('cat-f-name').value.trim();
+  if(!name) { setError('cat-err-name','Name required.'); return; }
+  for(const m of db.meetings) for(const c of m.categories) if(c.id===_modalContext.catId) c.name=name;
+  saveDB(); closeModal(); showToast('Category renamed.','success'); renderCategories();
+}
+
+/* MEETING */
+function openAddMeetingModal() {
+  _modalContext={mode:'add'};
+  document.getElementById('modal-meeting-title').textContent='Add Meeting';
+  document.getElementById('meeting-f-name').value='';
+  clearErrors(['meeting-err-name']); openModal('modal-meeting');
+}
+
+function openRenameMeetingModal() { const mtg=findMeeting(currentMeetingId); if(mtg) openRenameMeetingModalFor(currentMeetingId); }
+
+function openRenameMeetingModalFor(mtgId) {
+  const mtg=findMeeting(mtgId); if(!mtg) return;
+  _modalContext={mode:'edit',mtgId};
+  document.getElementById('modal-meeting-title').textContent='Rename Meeting';
+  document.getElementById('meeting-f-name').value=mtg.name;
+  clearErrors(['meeting-err-name']); openModal('modal-meeting');
+}
+
+function saveMeeting() {
+  const name=document.getElementById('meeting-f-name').value.trim();
+  if(!name) { setError('meeting-err-name','Name required.'); return; }
+  if(_modalContext.mode==='add') {
+    const m={id:genId('mtg'),name,createdDate:new Date().toISOString(),categories:[]};
+    db.meetings.push(m); currentMeetingId=m.id;
+    showToast('Meeting added.','success');
+  } else {
+    const m=findMeeting(_modalContext.mtgId); if(m) m.name=name;
+    showToast('Meeting renamed.','success');
+  }
+  saveDB(); closeModal();
+  if(currentPage==='issues') { populateMeetingDropdown(); renderCategories(); }
+  if(currentPage==='admin') renderAdminPage();
+}
+
+/* USER */
+function openAddUserModal() {
+  _modalContext={mode:'add'};
+  document.getElementById('modal-user-title').textContent='Add User';
+  ['user-f-name','user-f-company','user-f-email'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('user-f-access').value='User';
+  clearErrors(['user-err-name','user-err-email']); openModal('modal-user');
+}
+
+function openEditUserModal(userId) {
+  const u=db.admin.find(x=>x.id===userId); if(!u) return;
+  _modalContext={mode:'edit',userId};
+  document.getElementById('modal-user-title').textContent='Edit User';
+  document.getElementById('user-f-name').value=u.name;
+  document.getElementById('user-f-company').value=u.company||'';
+  document.getElementById('user-f-email').value=u.email;
+  document.getElementById('user-f-access').value=u.accessLevel;
+  clearErrors(['user-err-name','user-err-email']); openModal('modal-user');
+}
+
+function saveUser() {
+  const name=document.getElementById('user-f-name').value.trim();
+  const email=document.getElementById('user-f-email').value.trim();
+  if(!name) { setError('user-err-name','Name required.'); return; }
+  if(_modalContext.mode==='add') {
+    db.admin.push({
+      id:genId('admin'),name,email,
+      company:document.getElementById('user-f-company').value.trim(),
+      accessLevel:document.getElementById('user-f-access').value,
+      createdDate:new Date().toISOString(),active:true,
+      loginEnabled:!!email
+    });
+    showToast('User added.','success');
+  } else {
+    const u=db.admin.find(x=>x.id===_modalContext.userId);
+    if(u) Object.assign(u,{name,email,
+      company:document.getElementById('user-f-company').value.trim(),
+      accessLevel:document.getElementById('user-f-access').value
+    });
+    showToast('User updated.','success');
+  }
+  saveDB(); closeModal(); renderUsersTable();
+}
+
+/* ADD CATEGORY */
+function addCategory() {
+  const inp=document.getElementById('new-cat-name');
+  const name=inp.value.trim();
+  if(!name) { showToast('Enter a category name first.','error'); return; }
+  const mtg=findMeeting(currentMeetingId); if(!mtg) return;
+  mtg.categories.push({id:genId('cat'),name,meetingId:currentMeetingId,createdDate:new Date().toISOString(),issues:[]});
+  inp.value=''; saveDB(); renderCategories(); showToast('Category added.','success');
+}
+
+/* DELETE */
+function confirmDelete(type,id) {
+  const labels={issue:'issue',comment:'comment',ai:'action item',response:'response',category:'category',meeting:'meeting',user:'user'};
+  openConfirm(`Delete ${labels[type]||type}`,'🗑️',`Delete this ${labels[type]}?`,'This cannot be undone.',()=>doDelete(type,id));
+}
+
+function doDelete(type,id) {
+  if(type==='issue') {
+    for(const m of db.meetings) for(const c of m.categories) {
+      const i=c.issues.findIndex(x=>x.id===id); if(i>=0) { c.issues.splice(i,1); break; }
+    }
+  } else if(type==='comment') {
+    for(const m of db.meetings) for(const c of m.categories) for(const i of c.issues) {
+      const idx=i.comments.findIndex(x=>x.id===id); if(idx>=0) { i.comments.splice(idx,1); break; }
+    }
+  } else if(type==='ai') {
+    for(const m of db.meetings) for(const c of m.categories) for(const i of c.issues) for(const cm of i.comments) {
+      const idx=cm.actionItems.findIndex(x=>x.id===id); if(idx>=0) { cm.actionItems.splice(idx,1); break; }
+    }
+  } else if(type==='response') {
+    for(const m of db.meetings) for(const c of m.categories) for(const i of c.issues) for(const cm of i.comments) for(const ai of cm.actionItems) {
+      const idx=ai.responses.findIndex(x=>x.id===id); if(idx>=0) { ai.responses.splice(idx,1); break; }
+    }
+  } else if(type==='category') {
+    for(const m of db.meetings) { const i=m.categories.findIndex(x=>x.id===id); if(i>=0) { m.categories.splice(i,1); break; } }
+  } else if(type==='meeting') {
+    const i=db.meetings.findIndex(m=>m.id===id);
+    if(i>=0) {
+      db.meetings.splice(i,1);
+      if(db.meetings.length===0) db.meetings.push({id:genId('mtg'),name:'Current Issues',createdDate:new Date().toISOString(),categories:[]});
+      currentMeetingId=db.meetings[0].id;
+    }
+  } else if(type==='user') {
+    const i=db.admin.findIndex(u=>u.id===id); if(i>=0) db.admin.splice(i,1);
+  }
+  saveDB(); showToast('Deleted.','info'); refreshAfterEdit();
+  if(type==='issue'&&currentPage==='history') navigate('issues');
+  if(type==='meeting'||type==='user') renderAdminPage();
+}
+
+function refreshAfterEdit() {
+  refreshAssigneeDropdown();
+  if(currentPage==='issues') renderCategories();
+  else if(currentPage==='history') renderHistoryPage();
+  else if(currentPage==='admin') renderAdminPage();
+}
+
+/* FINDERS */
+
+/* MOVE ISSUE BETWEEN CATEGORIES */
+function openMoveIssueModal(issueId) {
+  const found = findIssueAnywhere(issueId);
+  if(!found) return;
+  _modalContext = {mode:'move-issue', issueId, currentCatId: found.cat.id, meetingId: found.mtg.id};
+  const sel = document.getElementById('move-issue-cat-select');
+  // Populate with all categories in this meeting, excluding current
+  const mtg = findMeeting(found.mtg.id);
+  sel.innerHTML = mtg.categories
+    .filter(cat => cat.id !== found.cat.id)
+    .map(cat => `<option value="${escHtml(cat.id)}">${escHtml(cat.name)}</option>`)
+    .join('');
+  if(!sel.options.length) { showToast('No other categories to move to.','info'); return; }
+  openModal('modal-move-issue');
+}
+
+function confirmMoveIssue() {
+  const {issueId, currentCatId, meetingId} = _modalContext;
+  const targetCatId = document.getElementById('move-issue-cat-select').value;
+  if(!targetCatId) return;
+  const mtg = findMeeting(meetingId);
+  const srcCat = mtg.categories.find(c => c.id === currentCatId);
+  const dstCat = mtg.categories.find(c => c.id === targetCatId);
+  if(!srcCat || !dstCat) return;
+  const idx = srcCat.issues.findIndex(i => i.id === issueId);
+  if(idx === -1) return;
+  const [issue] = srcCat.issues.splice(idx, 1);
+  issue.categoryId = targetCatId;
+  dstCat.issues.push(issue);
+  saveDB(); closeModal(); renderCategories();
+  showToast('Issue moved to ' + dstCat.name, 'success');
+}
+
+function findMeeting(id) { return db.meetings.find(m=>m.id===id); }
+function findIssueAnywhere(issueId) {
+  for(const mtg of db.meetings) for(const cat of mtg.categories) for(const iss of cat.issues)
+    if(iss.id===issueId) return {mtg,cat,iss};
+  return null;
+}
+function findCommentAnywhere(commentId) {
+  for(const m of db.meetings) for(const c of m.categories) for(const i of c.issues)
+    for(const cm of i.comments) if(cm.id===commentId) return {iss:i,cmt:cm};
+  return null;
+}
+function findAIAnywhere(aiId) {
+  for(const m of db.meetings) for(const c of m.categories) for(const i of c.issues) {
+    for(const cm of i.comments) for(const ai of cm.actionItems) if(ai.id===aiId) return {iss:i,cmt:cm,ai};
+    for(const ai of (i.actionItems||[])) if(ai.id===aiId) return {iss:i,cmt:null,ai};
+  }
+  return null;
+}
+
+/* TOAST */
+function showToast(msg,type='info') {
+  const cont=document.getElementById('toast-container');
+  const t=document.createElement('div'); t.className=`toast ${type}`;
+  const icons={success:'✓',error:'✕',info:'ℹ'};
+  t.innerHTML=`<span>${icons[type]||'ℹ'}</span> ${escHtml(msg)}`;
+  cont.appendChild(t);
+  setTimeout(()=>{ t.style.animation='toastOut .3s ease forwards'; setTimeout(()=>t.remove(),300); },3200);
+}
+
+/* INIT */
+(async () => {
+  await loadDB();
+  loadSession();
+  if (session && session.isLoggedIn) {
+    currentMeetingId = db.meetings[0]?.id;
+    navigate('issues');
+  } else {
+    navigate('login');
+  }
+  startSync(); // begin realtime / polling for multi-user modes
+})();
+</script>
+</body>
+</html>
